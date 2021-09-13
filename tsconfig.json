@@ -6,10 +6,13 @@
     "paths": {
       "src/*": ["./*"]
     },
+    "types": ["node"],
     "moduleResolution": "node",
     "allowJs": true,
     "target": "ESNext",
     "strict": true,
+    "declaration": false,
+    "typeRoots": ["./types"]
   },
   
   "include": [

@@ -1,14 +1,25 @@
+import * as React from 'react'
 import { homePath, queryRoutePath } from 'src/router'
 import { Link } from 'react-router-dom'
 import portrait from 'src/assets/images/portrait.jpg'
 import styles from './style.module.scss'
 
-const navsConfig = [
+interface navType {
+  text: string,
+  path: string
+}
+type navsType = Array<navType>
+
+const navsConfig: navsType = [
   { text: '首页', path: homePath },
   { text: '栏目', path: queryRoutePath('column') }
 ]
 
-function Slide(props) {
+type SlideProps = {
+  className: string
+}
+
+const Slide: React.FC<SlideProps> = (props) => {
   const navs = navsConfig.map(({text, path}) =>(
     <li key={path}>
       <Link to={path}>{text}</Link>

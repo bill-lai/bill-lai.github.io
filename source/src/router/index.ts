@@ -1,15 +1,14 @@
-import { FunctionComponent, Component } from 'react'
+import * as React from 'react'
 import Home from '../views/home'
 import Column from '../views/column'
 import { generatePath as toolGeneratePath } from 'react-router-dom'
 import { ExtractRouteParams } from 'react-router'
-
 import {
   normalize,
   queryRoute as toolQueryRoute,
 } from './tool'
 
-export type RouteComponent = FunctionComponent | Component
+export type RouteComponent = React.FC | typeof React.Component
 export type Routes = Array<Route>
 export interface Route {
   name: string,
