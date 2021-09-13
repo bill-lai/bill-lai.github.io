@@ -1,8 +1,21 @@
-import style from './style.module.scss'
-import PropTypes from 'prop-types'
+import * as React from 'react'
+import * as style from './style.module.scss'
 import { Link } from 'react-router-dom'
+import { ArticleSimpleType } from '../article-item'
 
-function ColumnItem(props) {
+export interface ColumnType {
+  id: number,
+  title: string,
+  desc?: string,
+  articles: Array<ArticleSimpleType>
+}
+
+type ColumnItemProp = {
+  className?: string
+} & ColumnType
+
+
+function ColumnItem(props: ColumnItemProp) {
   const articles = props.articles.map(({title, link, time}, i) =>(
     <li className={style['article-item']} key={i}>
       <Link to={link}>{title}</Link>
@@ -18,18 +31,6 @@ function ColumnItem(props) {
         { articles }
       </ul>
     </div>
-  )
-}
-
-ColumnItem.propTypes = {
-  title: PropTypes.string.isRequired,
-  desc: PropTypes.string,
-  articles: PropTypes.arrayOf(
-    PropTypes.shape({
-      title: PropTypes.string.isRequired,
-      link: PropTypes.string.isRequired,
-      time: PropTypes.object
-    })
   )
 }
 
