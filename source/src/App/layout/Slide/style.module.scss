@@ -1,0 +1,38 @@
+.slide {
+  padding: 30px;
+  color: #fff;
+  line-height: 30px;
+
+  a {
+    color: #fff;
+    text-shadow: 0 1px #666;
+    transition: color .3s;
+
+    &:hover {
+      color: #ccc;
+    }
+  }
+
+  .portrait {
+    $size: 160px;
+    width: $size;
+    height: $size;
+    border-radius: 50%;
+  }
+
+  .content {
+    margin: 15px 10px;
+
+    .introduce {
+      h1 {
+        font-weight: 400;
+        font-size: 30px;
+      }
+    }
+
+    .navs {
+      margin-top: 15px;
+    }
+  }
+}
+
