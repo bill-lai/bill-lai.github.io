@@ -1,6 +1,7 @@
 import { resolve } from 'path'
+import { Route, Routes } from './index'
 
-export const normalize = (router, base = '') => {
+export const normalize = (router: Routes, base: string = ''): Routes => {
   const nRouter = []
 
   for (let route of router) {
@@ -16,19 +17,14 @@ export const normalize = (router, base = '') => {
   return nRouter
 }
 
-export const queryRoute = (router, qname) => {
+export const queryRoute = (router: Routes, qname: string): Route | undefined => {
   for (let route of router) {
     let croute
 
     if (route.name === qname) {
       return route
-    } else if (route.children && (croute = queryRoute(qname))) {
+    } else if (route.children && (croute = queryRoute(route.children, qname))) {
       return croute
     }
   }
-}
-
-export const queryRoutePath = (router, qname) => {
-  let route = queryRoute(router, qname)
-  return route ? route.path : null
 }

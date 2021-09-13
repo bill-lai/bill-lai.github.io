@@ -1,4 +1,5 @@
 import styles from './style.module.scss'
+import * as React from 'react'
 import { 
   router, 
   homePath 
@@ -11,7 +12,7 @@ import {
 } from 'react-router-dom'
 import Slide from './layout/Slide'
 
-function App() {
+function App(): FunctionComponent {
   const views = router.map(({path, Component}) => (
     <Route path={path} key={path}><Component /></Route>
   ))
