@@ -109,6 +109,9 @@ module.exports = function (webpackEnv) {
           : {},
       },
       {
+        loader: require.resolve('css-modules-typescript-loader')
+      },
+      {
         loader: require.resolve('css-loader'),
         options: cssOptions,
       },

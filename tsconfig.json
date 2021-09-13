@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "outDir": "./build",
+    "baseUrl": "./source/src",
+    "jsx": "react",
+    "paths": {
+      "src/*": ["./*"]
+    },
+    "moduleResolution": "node",
+    "allowJs": true,
+    "target": "ESNext",
+    "strict": true,
+  },
+  
+  "include": [
+    "**/*.tsx",
+    "**/*.ts"
+  ],
+  "exclude": [
+    "./build/**/*"
+  ]
+}
