@@ -12,7 +12,7 @@ import {
 } from 'react-router-dom'
 import Slide from './layout/Slide'
 
-function App(): FunctionComponent {
+function App() {
   const views = router.map(({path, Component}) => (
     <Route path={path} key={path}><Component /></Route>
   ))
