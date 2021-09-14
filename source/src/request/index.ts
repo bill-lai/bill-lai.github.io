@@ -1,12 +1,10 @@
-import * as config from './config'
-import { ConfigType } from './config'
+
 import {
   AxiosRequestConfig as BaseAxiosReqConfig,
   AxiosStatic as BaseAxiosStatic
 } from 'axios'
 import axios from 'axios'
 
-export type url = typeof config[keyof typeof config]
 
 type AxiosConfigArgBase = {
   url?: BaseAxiosReqConfig['url'],
@@ -15,46 +13,63 @@ type AxiosConfigArgBase = {
   response?: any
 }
 
-type AxiosConfigArg<T extends url> = T extends keyof ConfigType 
-  ? { [K in keyof ConfigType[T]]: ConfigType[T][K] } 
+type AxiosConfigArg<Config, URL> = URL extends keyof Config 
+  ? { [K in keyof Config[URL]]: Config[URL][K] } 
   : AxiosConfigArgBase
 
 type AxiosReqConfig<
-  T extends url,
-  Proc = Omit<AxiosConfigArg<T>, 'response'>
+  Config,
+  URL,
+  Proc = Omit<AxiosConfigArg<Config, URL>, 'response'>
 > = Omit<BaseAxiosReqConfig, keyof Proc | 'url'> & Proc & {
-  url?: T
+  url?: URL
 }
 
-type AxiosResData<T extends url> = Promise<AxiosConfigArg<T>['response']>
-type AxiosReqData<T extends url> = 'data' extends keyof AxiosConfigArg<T>
-  ? AxiosConfigArg<T>['data']
+type AxiosResData<Config, URL> = Promise<
+  'response' extends keyof AxiosConfigArg<Config, URL> 
+    ? AxiosConfigArg<Config, URL>['response'] 
+    : any
+>
+
+type AxiosReqData<Config, URL> = 'data' extends keyof AxiosConfigArg<Config, URL>
+  ? AxiosConfigArg<Config, URL>['data']
   : null
-type AxiosGivenReqData<T extends url> = Omit<AxiosReqConfig<T>, 'method'>
+type AxiosGivenReqData<Config, URL> = Omit<AxiosReqConfig<Config, URL>, 'method'>
 
-interface AxiosInstance {
-  getUri<T extends url>(config?: AxiosReqConfig<T>): string;
-  request<T extends url>(config: AxiosReqConfig<T>): AxiosResData<T>;
-  get<T extends url>(url: T, config?: AxiosGivenReqData<T>): AxiosResData<T>;
-  delete<T extends url>(url: T, config?: AxiosGivenReqData<T>): AxiosResData<T>;
-  head<T extends url>(url: T, config?: AxiosGivenReqData<T>): AxiosResData<T>;
-  options<T extends url>(url: T, config?: AxiosGivenReqData<T>): AxiosResData<T>;
-  post<T extends url>(url: T, data: AxiosReqData<T>, config?: AxiosGivenReqData<T>): AxiosResData<T>;
-  put<T extends url>(url: T, data?: AxiosReqData<T>, config?: AxiosGivenReqData<T>): AxiosResData<T>;
-  patch<T extends url>(url: T, data?: AxiosReqData<T>, config?: AxiosGivenReqData<T>): AxiosResData<T>;
+type GivenUrl<Config, M extends BaseAxiosReqConfig['method']> = {
+  [K in keyof Config ]: 'method' extends keyof Config[K] 
+    ? Config[K]['method'] extends M 
+      ? K 
+      : never
+    : never
+}[keyof Config]
+
+
+interface AxiosInstance<
+  Config, 
+  URLS extends keyof Config,
+> {
+  getUri<URL extends URLS>(config?: AxiosReqConfig<Config, URL>): string;
+  request<URL extends URLS>(config: AxiosReqConfig<Config, URL>): AxiosResData<Config, URL>;
+  get<URL extends GivenUrl<Config, 'GET'>>(url: URL, config?: AxiosGivenReqData<Config, URL>): AxiosResData<Config, URL>;
+  delete<URL extends GivenUrl<Config, 'DELETE'>>(url: URL, config?: AxiosGivenReqData<Config, URL>): AxiosResData<Config, URL>;
+  head<URL extends GivenUrl<Config, 'HEAD'>>(url: URL, config?: AxiosGivenReqData<Config, URL>): AxiosResData<Config, URL>;
+  options<URL extends GivenUrl<Config, 'OPTIONS'>>(url: URL, config?: AxiosGivenReqData<Config, URL>): AxiosResData<Config, URL>;
+  post<URL extends GivenUrl<Config, 'POST'>>(url: URL, data: AxiosReqData<Config, URL>, config?: AxiosGivenReqData<Config, URL>): AxiosResData<Config, URL>;
+  put<URL extends GivenUrl<Config, 'PUT'>>(url: URL, data?: AxiosReqData<Config, URL>, config?: AxiosGivenReqData<Config, URL>): AxiosResData<Config, URL>;
+  patch<URL extends GivenUrl<Config, 'PATCH'>>(url: URL, data?: AxiosReqData<Config, URL>, config?: AxiosGivenReqData<Config, URL>): AxiosResData<Config, URL>;
 }
 
-export type AxiosStatic = Omit<BaseAxiosStatic, keyof AxiosInstance> & AxiosInstance & {
-  create<T extends url>(config?: AxiosReqConfig<T>): AxiosInstance;
-}
+export type AxiosStatic<Config, URLS extends keyof Config = keyof Config> = 
+  Omit<BaseAxiosStatic, keyof AxiosInstance<Config, URLS>> & AxiosInstance<Config, URLS> & {
+    create<T extends URLS>(config?: AxiosReqConfig<Config, T>): AxiosInstance<Config, URLS>;
+  }
 
-let test: AxiosStatic = axios
+import * as config from './config'
+import { ConfigType } from './config'
+export type url = typeof config[keyof typeof config]
+  
+  
+let test: AxiosStatic<ConfigType> = axios
 
-test.post('a', null, { params: {id: 1} })
-test.request({
-  url: 'a',
-  method: 'GET',
-  params: { id: 2 }
-})
-
-export default axios as AxiosStatic
+export default axios as AxiosStatic<ConfigType>

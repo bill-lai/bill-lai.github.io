@@ -18,5 +18,9 @@ export type ConfigType = {
       code: number,
       data: number
     }
+  },
+  [getColumn]: {
+    method: 'POST',
+    data: { id: number }
   }
 }
