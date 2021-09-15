@@ -1,0 +1,36 @@
+.layer {
+  .title {
+    font-size: 1.3rem;
+    font-weight: 500;
+  }
+
+  .articles,
+  .desc {
+    font-size: 1.14rem;
+  }
+  
+  .title,
+  .desc,
+  .articles {
+    margin-top: 1rem;
+  }
+
+  .articles {
+    list-style: disc;
+    margin-left: 2rem;
+
+    span {
+      font-size: 0.875em;
+      margin-left: 5px;
+      &::before {
+        content: '(';
+      }
+      &::after {
+        content: ')';
+      }
+    }
+  }
+
+}
+
+

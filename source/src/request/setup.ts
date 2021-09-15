@@ -46,7 +46,7 @@ type GivenUrl<Config, M extends BaseAxiosReqConfig['method']> = {
 
 interface AxiosInstance<
   Config, 
-  URLS extends keyof Config,
+  URLS,
 > {
   getUri<URL extends URLS>(config?: AxiosReqConfig<Config, URL>): string;
   request<URL extends URLS>(config: AxiosReqConfig<Config, URL>): AxiosResData<Config, URL>;
@@ -59,7 +59,7 @@ interface AxiosInstance<
   patch<URL extends GivenUrl<Config, 'PATCH'>>(url: URL, data?: AxiosReqData<Config, URL>, config?: AxiosGivenReqData<Config, URL>): AxiosResData<Config, URL>;
 }
 
-export type AxiosStatic<Config, URLS extends keyof Config = keyof Config> = 
+export type AxiosStatic<Config, URLS = keyof Config> = 
   Omit<BaseAxiosStatic, keyof AxiosInstance<Config, URLS>> & AxiosInstance<Config, URLS> & {
     create<T extends URLS>(config?: AxiosReqConfig<Config, T>): AxiosInstance<Config, URLS>;
   }
@@ -92,5 +92,3 @@ axios.interceptors.response.use(res => {
     return res.data
   }
 })
-
-export a from 'axios'
