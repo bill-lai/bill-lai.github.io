@@ -1,27 +1,29 @@
 import * as React from 'react'
-import Test from 'src/components/column-item'
 
-type AfferentComponent = React.FC<any>
-type GetProps<T extends AfferentComponent> = React.ComponentProps<T>
-
-type GetComponent<T> = 
-  T extends AfferentComponent 
-    ? React.FC<GetProps<T> & AttachProps>
-    : React.FC<AttachProps>
-
-type AttachProps = {
+export type WitchParentAttachProps = {
   className?: string
 }
 
-const witchParentClass = (Component: AfferentComponent): GetComponent<AfferentComponent>  => {
-  return (props: GetProps<AfferentComponent>) => {
-    return <Component {...props} className="" />
-  }
+// export const witchParentClass = <
+//   P extends object
+// > (Component: React.ComponentType<P>)  => {
+//   type PropsType = P & WitchParentAttachProps
+  
+//   return ({ className = '', ...props }: PropsType)  => 
+//     <Component className={className ? className + ' ' : className} {...props as P} />
+// }
+
+
+type Component<P> =  {
+  (props: React.PropsWithChildren<P>, context?: any): React.ReactElement<any, any> | null;
 }
 
 
-const ATest = witchParentClass(Test)
-
-const a = <ATest />
-
-export default witchParentClass
+export const witchParentClass = <
+  P extends object
+> (Component: Component<P>)  => {
+    type PropsType = P & WitchParentAttachProps
+  
+  return (props: P)  => 
+    <Component {...props} />
+}

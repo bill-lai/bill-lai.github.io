@@ -8,12 +8,11 @@ import {
   queryRoute as toolQueryRoute,
 } from './tool'
 
-export type RouteComponent = React.FC | typeof React.Component
 export type Routes = Array<Route>
 export interface Route {
   name: string,
   path: string,
-  Component: RouteComponent,
+  Component: React.ComponentType,
   main?: boolean,
   children?: Routes
 }

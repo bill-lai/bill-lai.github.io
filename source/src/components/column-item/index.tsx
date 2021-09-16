@@ -2,13 +2,10 @@ import * as React from 'react'
 import style from './style.module.scss'
 import { Column } from 'src/request'
 import { Link } from 'react-router-dom'
-
-type ColumnItemProp = {
-  className?: string
-} & Column
+import { witchParentClass, WitchParentAttachProps } from 'src/hoc'
 
 
-function ColumnItem(props: ColumnItemProp) {
+function ColumnItem(props: Column & WitchParentAttachProps) {
   const articles = props.articles.map(({title, id, time}, i) =>(
     <li key={i}>
       <Link to={id.toString()}>{title}</Link>
@@ -17,7 +14,7 @@ function ColumnItem(props: ColumnItemProp) {
   ))
 
   return (
-    <div className={style.layer}>
+    <div className={props.className + style.layer}>
       <h2 className={style.title}>{props.title}</h2>
       { props.desc && <p className={style.desc}>{props.desc}</p>  }
       <ul className={style['articles']}>
@@ -27,4 +24,4 @@ function ColumnItem(props: ColumnItemProp) {
   )
 }
 
-export default ColumnItem
+export default witchParentClass(ColumnItem)
