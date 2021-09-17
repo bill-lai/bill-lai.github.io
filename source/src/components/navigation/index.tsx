@@ -1,6 +1,6 @@
 import * as React from 'react'
 import style from './style.module.scss'
-import { witchParentClass, WitchParentAttachProps } from 'src/hoc'
+import { witchParentClass } from 'src/hoc'
 
 type NavItem<T> = {
   [Key in keyof T]: T[Key]
@@ -14,7 +14,7 @@ type onClick<T> = (args: NavItem<T>) => any
 type NavigationItemProps<T> = { list: Navs<T>, onClick: onClick<T> }
 type NavigationProps<T> = {
   title: string,
-  onClick?: (args: NavItem<T>) => any,
+  onClick?: (args: NavItem<T>) => void,
   list: Navs<T>
 }
 const onDefaultClick = (item: any) => {}
@@ -34,17 +34,19 @@ const NavigationItem = <T extends Object>(
   )
 }
 
+
 const Navigation = <T extends Object>({
   title, 
   onClick = onDefaultClick,
-  list,
-  className
-}: NavigationProps<T> & WitchParentAttachProps) => {
+  list
+}: NavigationProps<T>) => {
   return (
-    <div>
-      <h4 className={style.title + className}>{title}</h4>
-      <NavigationItem list={list} onClick={onClick} />
-    </div>
+    <React.Fragment>
+      <div>
+        <h4 className={style.title}>{title}</h4>
+        <NavigationItem list={list} onClick={onClick} />
+      </div>
+    </React.Fragment>
   )
 }
 

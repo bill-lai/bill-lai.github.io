@@ -4,26 +4,25 @@ export type WitchParentAttachProps = {
   className?: string
 }
 
-// export const witchParentClass = <
-//   P extends object
-// > (Component: React.ComponentType<P>)  => {
-//   type PropsType = P & WitchParentAttachProps
-  
-//   return ({ className = '', ...props }: PropsType)  => 
-//     <Component className={className ? className + ' ' : className} {...props as P} />
-// }
-
-
-type Component<P> =  {
-  (props: React.PropsWithChildren<P>, context?: any): React.ReactElement<any, any> | null;
-}
-
+type functionComponent<P> = (props: P) => React.ReactElement<any, any>
 
 export const witchParentClass = <
-  P extends object
-> (Component: Component<P>)  => {
-    type PropsType = P & WitchParentAttachProps
+  P extends object = {},
+> (Component: functionComponent<P>)  => {
+  type PropsType = P & WitchParentAttachProps
   
-  return (props: P)  => 
-    <Component {...props} />
+  const fn = ({ className = '', ...props }: PropsType)  => {
+    const instance = React.cloneElement(Component(props as P))
+    const type = (instance as any).type
+
+    if (type === React.Fragment) {
+
+    }
+    console.log(instance)
+    return instance
+  }
+    // <Component className={className ? className + ' ' : className} {...props as P} />
+
+  // return fn as functionComponent<P>
+  return fn
 }

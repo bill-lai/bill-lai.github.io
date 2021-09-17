@@ -5,14 +5,6 @@ import { Columns } from 'src/request'
 import Navigation from '../navigation'
 
 
-const test = <Navigation 
-  title="123"
-  list={[
-    {name: 2, title: '123'}
-  ]}
-  onClick={item => console.log(item.title)}
-/>
-
 type ThemeProps = {
   title: string,
   desc: string,
