@@ -1,7 +1,8 @@
 import * as React from 'react'
 import { homePath, queryRoutePath } from 'src/router'
 import { Link } from 'react-router-dom'
-import portrait from 'src/assets/images/portrait.jpg'
+// import portrait from 'src/assets/images/portrait.jpg'
+import portrait from 'src/assets/images/test.jpg'
 import styles from './style.module.scss'
 
 interface navType {

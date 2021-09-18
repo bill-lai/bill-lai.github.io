@@ -2,7 +2,7 @@ import * as React from 'react'
 import ColumnItem from '../column-item'
 import style from './style.module.scss'
 import { Columns } from 'src/request'
-import Navigation from '../navigation'
+import Navigation, { NavigationProps } from '../navigation'
 
 
 type ThemeProps = {
@@ -16,6 +16,18 @@ function Theme({
   title, 
   desc
 }: ThemeProps) {
+  const [active, setActive] = React.useState<Columns[0] | null>(null)
+  const [testColumns] = React.useState<NavigationProps<Columns[0]>['list']>(() => columns.map(item => {
+    return {
+      ...item,
+      children: JSON.parse(JSON.stringify(columns)).map((item: NavigationProps<Columns[0]>['list']) => {
+        return {
+          ...item,
+          children: JSON.parse(JSON.stringify(columns))
+        }
+      })
+    }
+  }))
 
   return (
     <React.Fragment>
@@ -26,10 +38,11 @@ function Theme({
           {columns.map((item, i) => <ColumnItem key={i} {...item} />)}
         </div>
       </div>
-      <Navigation 
+      <Navigation
         title={`${title}列表`}
-        list={[ { title: '123', age: 18 } ]}
-        onClick={item => console.log(item.age)}
+        active={active}
+        list={testColumns}
+        onClick={setActive}
       />
     </React.Fragment>
   )

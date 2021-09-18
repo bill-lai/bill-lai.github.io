@@ -4,25 +4,43 @@ export type WitchParentAttachProps = {
   className?: string
 }
 
-type functionComponent<P> = (props: P) => React.ReactElement<any, any>
+const cloneAttachElement = (instance: React.ReactElement<any>, attchClass: string): React.ReactElement => {
+  const type = instance.type
+  let children = instance.props.children
+  let className = instance.props.className
+
+  if (type === React.Fragment && children) {
+    if (Array.isArray(children)) {
+      children = children.map(
+        item => cloneAttachElement(item, attchClass)
+      )
+    } else {
+      children = cloneAttachElement(children, attchClass)
+    }
+  } else {
+    className = className ? `${className} ${attchClass}` : attchClass
+  }
+
+  return React.cloneElement(
+    instance,
+    {
+      ...instance.props,
+      children,
+      className
+    }
+  )
+}
+
 
 export const witchParentClass = <
   P extends object = {},
-> (Component: functionComponent<P>)  => {
-  type PropsType = P & WitchParentAttachProps
-  
-  const fn = ({ className = '', ...props }: PropsType)  => {
-    const instance = React.cloneElement(Component(props as P))
-    const type = (instance as any).type
+> (Component: React.FC<P>)  => {
 
-    if (type === React.Fragment) {
-
-    }
-    console.log(instance)
-    return instance
+  return ({ className, ...props }: P & WitchParentAttachProps, ...args: any) => {
+    const instance = Component(props as P, ...args)
+    return className && instance
+      ? cloneAttachElement(instance, className)
+      : instance
   }
-    // <Component className={className ? className + ' ' : className} {...props as P} />
 
-  // return fn as functionComponent<P>
-  return fn
 }

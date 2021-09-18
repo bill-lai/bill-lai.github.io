@@ -1,3 +1,95 @@
 .title {
-  color: #000;
+  color: #1a1a1a;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.top-navs {
+  --activeColor: #1a1a1a;
+
+  > li {
+    > span {
+      color: #6d6d6d;
+      padding-right: 7px;
+      padding-left: 7px;
+      font-weight: 700;
+      line-height: 3;
+
+      i {
+        display: inline-block;
+        font-size: 0.8em;
+        margin-left: 10px;
+        line-height: 1em;
+      }
+    }
+
+    &.active > span,
+    > span:hover {
+      color: var(--activeColor);
+    }
+
+    &.active > span > i {
+      transform: rotateZ(180deg);
+    }
+  }
+  
+  span {
+    transition: color .3s linear, font-weight .1s linear;
+    cursor: pointer;
+    display: inline-block;
+  }
+}
+
+
+.child-navs {
+  margin-left: 20px;
+
+  span {
+    position: relative;
+    font-size: 1.15rem;
+    color: #1a1a1a;
+
+    &:hover {
+      color: #6d6d6d;
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0;
+      background-color: #155799;
+      margin-left: -20px;
+      transition: width .1s linear;
+    }
+  }
+
+  > li:not(.active) > span {
+    font-weight: 400;
+  }
+
+  > li.active > span {
+    font-weight: 700;
+
+    &::before {
+      width: 4px;
+    }
+  }
+}
+
+
+.top-navs > li {
+  > .child-navs {
+    transition: max-height .3s linear;
+    max-height: 0;
+    overflow: hidden;
+    margin-left: 0;
+  }
+  
+  &.active > .child-navs {
+    max-height: 500px;
+  }
 }

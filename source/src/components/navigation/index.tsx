@@ -5,49 +5,99 @@ import { witchParentClass } from 'src/hoc'
 type NavItem<T> = {
   [Key in keyof T]: T[Key]
 } & {
-  // [Key: string]: any,
   title: string,
   children?: Navs<T>
 }
 type Navs<T> = Array<NavItem<T>>
-type onClick<T> = (args: NavItem<T>) => any
-type NavigationItemProps<T> = { list: Navs<T>, onClick: onClick<T> }
-type NavigationProps<T> = {
+type NavContentProps<T> = { 
+  list: Navs<T>, 
+  active: NavItem<T> | null,
+  isChildren?: boolean,
+  onClick: (args: NavItem<T>) => void
+}
+export type NavigationProps<T> = Omit<NavContentProps<T>, 'onClick'> & {
   title: string,
-  onClick?: (args: NavItem<T>) => void,
-  list: Navs<T>
+  onClick: (args: NavItem<T> | null) => void
 }
 const onDefaultClick = (item: any) => {}
 
-const NavigationItem = <T extends Object>(
-  { list, onClick }: NavigationItemProps<T>
+const navIsActive = <T extends Object>(item: NavItem<T>, activeItem: NavItem<T>) => {
+  if (item === activeItem) {
+    return true
+  } else if (item.children) {
+    for (let cItem of item.children) {
+      if (navIsActive(cItem, activeItem)) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+const NavsContent = React.forwardRef(<T extends object>(
+  { 
+    list, 
+    active, 
+    isChildren = false,
+    onClick 
+  }: NavContentProps<T>
 ) => {
-  return (
-    <ul>
-      {list.map(item => (
-        <li>
-          {item.children && <NavigationItem list={item.children} onClick={onClick} />}
-          <span onClick={() => onClick(item)}>{item.title}</span>
-        </li>
-      ))}
-    </ul>
-  )
-}
+  const childrenEles = list.map((item, i) => {
+    const isActive = active && navIsActive(item, active)
+    const clickHandle = (ev: React.SyntheticEvent) => {
+      onClick(item)
+      ev.stopPropagation() 
+    }
+
+    return (
+      <li key={i} className={isActive ? style.active : ''}>
+        <span onClick={clickHandle}>
+          {item.title}
+          { !isChildren && item.children && <i className="iconfont icon-arrow_down" /> }
+        </span>
+        {item.children && 
+          <NavsContent
+            list={item.children} 
+            isChildren={true}
+            active={active}
+            onClick={onClick} 
+            // className={ style['child-navs'] } 
+          />
+        }
+      </li>
+    )
+  })
+
+  return <ul>{childrenEles}</ul>
+})
 
 
-const Navigation = <T extends Object>({
+const Navigation = <T extends object>({
   title, 
-  onClick = onDefaultClick,
-  list
+  list,
+  active,
+  onClick = onDefaultClick
 }: NavigationProps<T>) => {
+  const clickHandle = (item: NavItem<T>) => {
+    if (list.some(citem => citem === item) && active && navIsActive(item, active)) {
+      onClick(null)
+    } else {
+      onClick(item)
+    }
+  }
+
   return (
-    <React.Fragment>
-      <div>
-        <h4 className={style.title}>{title}</h4>
-        <NavigationItem list={list} onClick={onClick} />
-      </div>
-    </React.Fragment>
+    <div>
+      <h4 className={style.title}>{title}</h4>
+      <NavsContent
+        // ref={navContent}
+        active={active}
+        list={list} 
+        onClick={clickHandle}
+        // className={style['top-navs']} 
+      />
+    </div>
   )
 }
 
-export default witchParentClass(Navigation)
+export default Navigation
