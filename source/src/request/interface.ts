@@ -1,11 +1,13 @@
 import {
   getArticle,
-  getColumn
+  getColumn,
+  getColumnList
 } from './config'
 
 import {
   Article,
-  Column
+  Column,
+  ColumnList
 } from './model'
 
 type Interface = {
@@ -17,7 +19,11 @@ type Interface = {
   [getColumn]: {
     method: 'GET',
     params: { id: number },
-    data: Column
+    response: Column
+  },
+  [getColumnList]: {
+    method: 'GET',
+    response: ColumnList
   }
 }
 

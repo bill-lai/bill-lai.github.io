@@ -13,7 +13,8 @@ type navsType = Array<navType>
 
 const navsConfig: navsType = [
   { text: '首页', path: homePath },
-  { text: '栏目', path: queryRoutePath('column') }
+  { text: '专题', path: queryRoutePath('archive') },
+  { text: '归档', path: queryRoutePath('special') }
 ]
 
 type SlideProps = {

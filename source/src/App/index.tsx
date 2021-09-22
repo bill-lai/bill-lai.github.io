@@ -5,7 +5,7 @@ import {
   homePath 
 } from '../router'
 import { 
-  HashRouter as Router, 
+  BrowserRouter as Router, 
   Route,
   Switch,
   Redirect
@@ -22,12 +22,10 @@ const App: React.FC<{}> = () => {
     <div className={styles.app}>
       <Router>
         <Slide className={styles.slide}></Slide>
-        <div className={styles.content}>
-          <Switch>
-            {views}
-            <Redirect to={homePath} />
-          </Switch>
-        </div> 
+        <Switch>
+          {views}
+          <Redirect to={homePath} />
+        </Switch>
       </Router>
     </div>
   )

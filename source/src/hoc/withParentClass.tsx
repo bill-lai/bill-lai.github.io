@@ -1,6 +1,7 @@
 import * as React from 'react'
+import { Component } from './index'
 
-export type WitchParentAttachProps = {
+type WitchParentAttachProps = {
   className?: string
 }
 
@@ -34,10 +35,10 @@ const cloneAttachElement = (instance: React.ReactElement<any>, attchClass: strin
 
 export const witchParentClass = <
   P extends object = {},
-> (Component: React.FC<P>)  => {
+> (Component: Component<P>)  => {
 
-  return ({ className, ...props }: P & WitchParentAttachProps, ...args: any) => {
-    const instance = Component(props as P, ...args)
+  return ({ className, ...props }: P & WitchParentAttachProps, ref: any) => {
+    const instance = Component(props as P, ref)
     return className && instance
       ? cloneAttachElement(instance, className)
       : instance

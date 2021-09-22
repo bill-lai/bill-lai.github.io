@@ -1,0 +1,39 @@
+.layer {
+  display: flex;
+
+  .main {
+    padding: 30px 80px 30px 30px;
+    background-color: #fff;
+    flex: 1;
+    max-width: 1200px;
+  }  
+
+  .right {
+    --width: 240px;
+    flex: none;
+    width: var(--width);
+    overflow-x: hidden;
+    position: relative;
+
+    .indepen-layer {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: var(--width);
+      overflow: hidden;
+      
+      .indepen {
+        max-height: 100%;
+        overflow-y: auto;
+        width: calc(var(--width) + 30px);
+        padding-left: 80px;
+        top: 0;
+        padding-top: 60px;
+      }
+    }
+  }
+
+  .bottom {
+    color: #000;
+  }
+}

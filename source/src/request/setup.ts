@@ -1,7 +1,9 @@
 import axios from 'axios'
+import devData from './dev.data'
 import {
   AxiosRequestConfig as BaseAxiosReqConfig,
-  AxiosStatic as BaseAxiosStatic
+  AxiosStatic as BaseAxiosStatic,
+  AxiosResponse as BaseAxiosResponse
 } from 'axios'
 
 
@@ -64,31 +66,56 @@ export type AxiosStatic<Config, URLS = keyof Config> =
     create<T extends URLS>(config?: AxiosReqConfig<Config, T>): AxiosInstance<Config, URLS>;
   }
 
-// 不需要loadding的加载
-export const notLoadUrls: Array<string> = []
 
-const stopRequest = () => {
-  const source = axios.CancelToken.source()
-  source.cancel('Illegal request')
+let isSetup = false
+const setupAxios = <
+  Interface, 
+  URLS extends {[key: string]: string}, 
+  URL = URLS[keyof URLS], 
+  RetAxios = AxiosStatic<Interface, URL>
+>(
+  urlMaps: URLS, 
+  notLoadUrls: Array<string> = Object.values(urlMaps)
+) => {
+  if (isSetup) return axios as unknown as RetAxios
+
+  const urls = Object.values(urlMaps)
+  
+  const stopRequest = () => {
+    const source = axios.CancelToken.source()
+    source.cancel('Illegal request')
+  }
+
+  const errorHandler = (res: BaseAxiosResponse, msg: string = '出了点小问题') => {
+    if (process.env.NODE_ENV === 'development') {
+      if (res.config && res.config.url && (res.config.url in devData)) {
+        return (devData as any)[res.config.url]
+      }
+    }
+    return Promise.reject(res)
+  }
+
+  axios.interceptors.request.use(config => {
+    if (!config.url || !urls.includes(config.url)) {
+      stopRequest();
+      return config
+    }
+
+    if (notLoadUrls.includes(config.url)) {
+      return config
+    } else {
+      return config
+    }
+  })
+
+  axios.interceptors.response.use(res => {
+    if (res.status !== 200) {
+      return errorHandler(res)
+    } else {
+      return res.data
+    }
+  }, errorHandler)
+  return axios as unknown as RetAxios
 }
 
-axios.interceptors.request.use(config => {
-  if (!config.url) {
-    return stopRequest();
-  }
-
-  if (notLoadUrls.includes(config.url)) {
-    return config
-  } else {
-    return stopRequest()
-  }
-})
-
-
-axios.interceptors.response.use(res => {
-  if (res.status !== 200) {
-    alert('请求错误')
-  } else {
-    return res.data
-  }
-})
+export default setupAxios

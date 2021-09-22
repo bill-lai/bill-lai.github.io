@@ -43,7 +43,7 @@
 
 
 .child-navs {
-  margin-left: 20px;
+  padding-left: 20px;
 
   span {
     position: relative;
@@ -84,12 +84,11 @@
 .top-navs > li {
   > .child-navs {
     transition: max-height .3s linear;
-    max-height: 0;
     overflow: hidden;
-    margin-left: 0;
+    margin-left: -20px;
   }
-  
-  &.active > .child-navs {
-    max-height: 500px;
+
+  &:not(.active) > .child-navs {
+    max-height: 0 !important;
   }
 }

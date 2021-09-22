@@ -3,7 +3,6 @@
 interface CssExports {
   'columns': string;
   'desc': string;
-  'layer': string;
   'title': string;
 }
 export const cssExports: CssExports;

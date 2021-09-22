@@ -18,4 +18,6 @@ export type Column = {
   articles: Array<ArticleBase>
 }
 
+export type ColumnList = Array<Column>
+
 export type Columns = Array<Column>

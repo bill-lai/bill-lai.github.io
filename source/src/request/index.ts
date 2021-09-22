@@ -1,11 +1,9 @@
-import { AxiosStatic } from './setup'
-import baseAxios from 'axios'
+import setup from './setup'
 import * as urls from './config'
 import Interface from './interface'
 
-type URLS = typeof urls[keyof typeof urls]
 
-export const axios = baseAxios as AxiosStatic<Interface, URLS>
+export const axios = setup<Interface, typeof urls>(urls)
 export const config = urls
 
 export * from './model'

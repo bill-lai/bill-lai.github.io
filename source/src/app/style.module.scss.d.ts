@@ -4,7 +4,6 @@ interface CssExports {
   'app': string;
   'app1': string;
   'app2': string;
-  'content': string;
   'slide': string;
 }
 export const cssExports: CssExports;

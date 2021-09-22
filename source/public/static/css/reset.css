@@ -24,7 +24,7 @@ fieldset, img { border:0; }
 button, input, select, textarea { font-size:100%; }
 
 div, header, body { box-sizing: border-box; }
-body { background: #ddd; }
+body { background: #f7f7f7; }
 
 a:hover{ text-decoration: underline; }
 

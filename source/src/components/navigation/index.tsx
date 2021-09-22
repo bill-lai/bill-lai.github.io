@@ -2,24 +2,25 @@ import * as React from 'react'
 import style from './style.module.scss'
 import { witchParentClass } from 'src/hoc'
 
-type NavItem<T> = {
+export type NavItem<T> = {
   [Key in keyof T]: T[Key]
 } & {
   title: string,
   children?: Navs<T>
 }
-type Navs<T> = Array<NavItem<T>>
-type NavContentProps<T> = { 
-  list: Navs<T>, 
+export type Navs<T> = Array<NavItem<T>>
+export type baseNavProps<T> = {
   active: NavItem<T> | null,
-  isChildren?: boolean,
-  onClick: (args: NavItem<T>) => void
+  onClick?: (args: NavItem<T>) => void,
+  isChildren?: boolean
 }
-export type NavigationProps<T> = Omit<NavContentProps<T>, 'onClick'> & {
-  title: string,
-  onClick: (args: NavItem<T> | null) => void
+export type navArgs<T> = NavItem<T> | null
+export type NavContentProps<T> = baseNavProps<T> & { item: NavItem<T> }
+export type NavsContentProps<T> = baseNavProps<T> & { list: Navs<T>, attachHeight?: boolean }
+export type NavigationProps<T> = Omit<NavsContentProps<T>, 'onClick'|'isChildren'> & { 
+  title: string, 
+  onClick?: (args: navArgs<T>) => void 
 }
-const onDefaultClick = (item: any) => {}
 
 const navIsActive = <T extends Object>(item: NavItem<T>, activeItem: NavItem<T>) => {
   if (item === activeItem) {
@@ -34,70 +35,107 @@ const navIsActive = <T extends Object>(item: NavItem<T>, activeItem: NavItem<T>)
   return false
 }
 
-const NavsContent = React.forwardRef(<T extends object>(
-  { 
-    list, 
-    active, 
-    isChildren = false,
-    onClick 
+const NavContent = <T extends object>(
+  {
+    item,
+    active,
+    isChildren,
+    onClick
   }: NavContentProps<T>
 ) => {
-  const childrenEles = list.map((item, i) => {
-    const isActive = active && navIsActive(item, active)
-    const clickHandle = (ev: React.SyntheticEvent) => {
-      onClick(item)
-      ev.stopPropagation() 
-    }
-
-    return (
-      <li key={i} className={isActive ? style.active : ''}>
-        <span onClick={clickHandle}>
-          {item.title}
-          { !isChildren && item.children && <i className="iconfont icon-arrow_down" /> }
-        </span>
-        {item.children && 
-          <NavsContent
-            list={item.children} 
-            isChildren={true}
-            active={active}
-            onClick={onClick} 
-            // className={ style['child-navs'] } 
-          />
-        }
-      </li>
-    )
+  const clickHandle = onClick && ((ev: React.SyntheticEvent) => {
+    onClick(item)
+    ev.stopPropagation() 
   })
+  const isActive = active
+    ? navIsActive(item, active)
+    : clickHandle 
+      ? null
+      : item
+  const Suffix = !isChildren && item.children 
+    && <i className="iconfont icon-arrow_down" />
 
-  return <ul>{childrenEles}</ul>
-})
+  return (
+    <li className={isActive ? style.active : ''}>
+      <span onClick={clickHandle}>
+        {item.title} {Suffix}
+      </span>
+      {item.children && 
+        <NavsContent
+          attachHeight={!isChildren}
+          list={item.children} 
+          isChildren={true}
+          active={active}
+          onClick={onClick} 
+          className={ style['child-navs'] } 
+        />
+      }
+    </li>
+  )
+}
+
+const NavsContent = witchParentClass(
+  <T extends object>(
+    { 
+      list,
+      attachHeight = false,
+      ...props
+    }: NavsContentProps<T>
+  ) => {
+    const children = list.map(
+      (item, i) => <NavContent {...props} key={i} item={item} />
+    )
+
+    if (attachHeight) {
+      const ref: React.MutableRefObject<HTMLUListElement | null> = React.useRef(null)
+      const [height, setHeight] = React.useState<number | null>(null)
+      const attchStyle = height !== null 
+        ? { maxHeight: height + 'px' }
+        : { }
+  
+      React.useEffect(() => {
+        if (!ref.current || height !== null) return;
+        const parent = ref.current.parentElement as HTMLElement
+        parent.classList.add(style.active)
+        setHeight(ref.current.offsetHeight)
+        parent.classList.remove(style.active)
+      }, [height])
+  
+      return <ul ref={ref} style={attchStyle}>{children}</ul>
+    } else {
+      return <ul>{children}</ul>
+    }
+  }
+)
 
 
-const Navigation = <T extends object>({
+const Navigation = witchParentClass(<T extends object>({
   title, 
   list,
   active,
-  onClick = onDefaultClick
+  onClick
 }: NavigationProps<T>) => {
-  const clickHandle = (item: NavItem<T>) => {
-    if (list.some(citem => citem === item) && active && navIsActive(item, active)) {
-      onClick(null)
-    } else {
-      onClick(item)
-    }
-  }
+  const clickHandle = onClick && ((item: NavItem<T>) => {
+    onClick(
+      list.some(citem => citem === item) && 
+        active && 
+        navIsActive(item, active)
+          ? null
+          : item
+    )
+  })
 
   return (
-    <div>
+    <React.Fragment>
       <h4 className={style.title}>{title}</h4>
       <NavsContent
-        // ref={navContent}
         active={active}
         list={list} 
         onClick={clickHandle}
-        // className={style['top-navs']} 
+        className={style['top-navs']} 
       />
-    </div>
+    </React.Fragment>
   )
-}
+})
 
 export default Navigation

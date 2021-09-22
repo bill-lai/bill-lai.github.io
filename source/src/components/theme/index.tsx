@@ -2,8 +2,11 @@ import * as React from 'react'
 import ColumnItem from '../column-item'
 import style from './style.module.scss'
 import { Columns } from 'src/request'
-import Navigation, { NavigationProps } from '../navigation'
+import Layer from '../content-layer'
+import Navigation, { navArgs } from '../navigation'
+import { withScreenShow } from 'src/hoc/index'
 
+const ScrollColumnItem = withScreenShow(ColumnItem)
 
 type ThemeProps = {
   title: string,
@@ -17,34 +20,36 @@ function Theme({
   desc
 }: ThemeProps) {
   const [active, setActive] = React.useState<Columns[0] | null>(null)
-  const [testColumns] = React.useState<NavigationProps<Columns[0]>['list']>(() => columns.map(item => {
-    return {
-      ...item,
-      children: JSON.parse(JSON.stringify(columns)).map((item: NavigationProps<Columns[0]>['list']) => {
-        return {
-          ...item,
-          children: JSON.parse(JSON.stringify(columns))
-        }
-      })
+  const clickNav = (column: navArgs<Columns[0]>) => {
+    if (column) {
+      window.location.hash = column.id.toString()
     }
-  }))
+    setActive(column)
+  }
+  const columnShowChange = (isShow: boolean) => {
+
+  }
 
   return (
-    <React.Fragment>
-      <div className={`${style.layer}`}>
-        <h1 className={style.title}>{title}</h1>
-        <p className={style.desc}>{desc}</p>
-        <div className={style.columns}>
-          {columns.map((item, i) => <ColumnItem key={i} {...item} />)}
-        </div>
-      </div>
-      <Navigation
-        title={`${title}列表`}
-        active={active}
-        list={testColumns}
-        onClick={setActive}
-      />
-    </React.Fragment>
+    <Layer 
+      main={
+        <React.Fragment>
+          <h1 className={style.title}>{title}</h1>
+          <p className={style.desc}>{desc}</p>
+          <div className={style.columns}>
+            {columns.map((item, i) => <ScrollColumnItem onShowChange={columnShowChange} key={i} {...item} />)}
+          </div>
+        </React.Fragment>
+      }
+      right={
+        <Navigation
+          title={`${title}列表`}
+          active={active}
+          list={columns}
+          onClick={clickNav}
+        />
+      }
+    />
   )
 }
 

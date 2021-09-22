@@ -1,6 +1,7 @@
 import * as React from 'react'
 import Home from '../views/home'
-import Column from '../views/column'
+import Special from '../views/special'
+import Archive from '../views/archive'
 import { generatePath as toolGeneratePath } from 'react-router-dom'
 import { ExtractRouteParams } from 'react-router'
 import {
@@ -26,10 +27,16 @@ export const router: Routes = normalize([
     Component: Home,
   },
   {
-    name: 'column',
-    path: '/column',
-    Component: Column
-  }
+    name: 'special',
+    path: '/special',
+    Component: Special
+  },
+  {
+    name: 'archive',
+    path: '/archive',
+    Component: Archive
+  },
+  
 ])
 
 export const home = router.find(({main}) => main)

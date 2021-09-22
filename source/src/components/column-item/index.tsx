@@ -15,7 +15,7 @@ function ColumnItem(props: Column) {
 
   return (
     <div className={style.layer}>
-      <h2 className={style.title}>{props.title}</h2>
+      <h2 className={style.title} id={`${props.id}`}>{props.title}</h2>
       { props.desc && <p className={style.desc}>{props.desc}</p>  }
       <ul className={style['articles']}>
         { articles }
