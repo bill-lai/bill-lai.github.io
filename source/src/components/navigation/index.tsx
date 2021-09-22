@@ -1,6 +1,6 @@
 import * as React from 'react'
 import style from './style.module.scss'
-import { witchParentClass } from 'src/hoc'
+import { witchParentClass, withScreenShow, WithScreenRef } from 'src/hoc'
 
 export type NavItem<T> = {
   [Key in keyof T]: T[Key]
@@ -35,7 +35,7 @@ const navIsActive = <T extends Object>(item: NavItem<T>, activeItem: NavItem<T>)
   return false
 }
 
-const NavContent = <T extends object>(
+const NavItemContent = withScreenShow(<T extends object>(
   {
     item,
     active,
@@ -72,7 +72,7 @@ const NavContent = <T extends object>(
       }
     </li>
   )
-}
+})
 
 const NavsContent = witchParentClass(
   <T extends object>(
@@ -82,9 +82,19 @@ const NavsContent = witchParentClass(
       ...props
     }: NavsContentProps<T>
   ) => {
-    const children = list.map(
-      (item, i) => <NavContent {...props} key={i} item={item} />
-    )
+    const refs: Array<WithScreenRef> = []
+    const children = list.map((item, i) => {
+      const ref: WithScreenRef = React.createRef()
+      refs.push(ref)
+      return <NavItemContent {...props} key={i} item={item} forwardRef={ref} />
+    })
+
+    React.useEffect(() => {
+      if (props.active) {
+        let index = list.indexOf(props.active)
+        index > -1 && refs[index].current?.goto()
+      }
+    })
 
     if (attachHeight) {
       const ref: React.MutableRefObject<HTMLUListElement | null> = React.useRef(null)
@@ -109,7 +119,7 @@ const NavsContent = witchParentClass(
 )
 
 
-const Navigation = witchParentClass(<T extends object>({
+const Navigation = <T extends object>({
   title, 
   list,
   active,
@@ -136,6 +146,6 @@ const Navigation = witchParentClass(<T extends object>({
       />
     </React.Fragment>
   )
-})
+}
 
 export default Navigation

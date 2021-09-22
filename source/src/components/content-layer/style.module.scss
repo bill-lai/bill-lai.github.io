@@ -1,8 +1,9 @@
 .layer {
   display: flex;
+  --top: 30px;
 
   .main {
-    padding: 30px 80px 30px 30px;
+    padding: var(--top) 80px 30px 30px;
     background-color: #fff;
     flex: 1;
     max-width: 1200px;
@@ -28,7 +29,7 @@
         width: calc(var(--width) + 30px);
         padding-left: 80px;
         top: 0;
-        padding-top: 60px;
+        padding-top: var(--top);
       }
     }
   }

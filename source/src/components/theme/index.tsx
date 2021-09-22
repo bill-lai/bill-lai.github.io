@@ -4,7 +4,7 @@ import style from './style.module.scss'
 import { Columns } from 'src/request'
 import Layer from '../content-layer'
 import Navigation, { navArgs } from '../navigation'
-import { withScreenShow } from 'src/hoc/index'
+import { withScreenShow, WithScreenRef } from 'src/hoc/index'
 
 const ScrollColumnItem = withScreenShow(ColumnItem)
 
@@ -19,6 +19,9 @@ function Theme({
   title, 
   desc
 }: ThemeProps) {
+  let isRunSetActive = false
+  const columnRefs: Array<WithScreenRef> = []
+  const scrollShowColumns: Columns = []
   const [active, setActive] = React.useState<Columns[0] | null>(null)
   const clickNav = (column: navArgs<Columns[0]>) => {
     if (column) {
@@ -26,9 +29,30 @@ function Theme({
     }
     setActive(column)
   }
-  const columnShowChange = (isShow: boolean) => {
+  const columnShowChange = (column: Columns[0], isShow: boolean) => {
+    let index = scrollShowColumns.indexOf(column)
+    if (index === -1 && isShow) {
+      scrollShowColumns.push(column)
+    } else if (index > -1 && !isShow) {
+      scrollShowColumns.splice(index, 1)
+    }
 
+    if (!isRunSetActive && column !== active) {
+      isRunSetActive = true
+      Promise.resolve().then(() => setActive(column))
+    }
   }
+  const columnEles = columns.map((item, i) => {
+    const ref: WithScreenRef = React.createRef()
+    columnRefs[i] = ref
+
+    return <ScrollColumnItem 
+      onShowChange={(isShow) => columnShowChange(item, isShow)} 
+      forwardRef={ref}
+      key={i} 
+      {...item} 
+    />
+  })
 
   return (
     <Layer 
@@ -37,7 +61,7 @@ function Theme({
           <h1 className={style.title}>{title}</h1>
           <p className={style.desc}>{desc}</p>
           <div className={style.columns}>
-            {columns.map((item, i) => <ScrollColumnItem onShowChange={columnShowChange} key={i} {...item} />)}
+            {columnEles}
           </div>
         </React.Fragment>
       }

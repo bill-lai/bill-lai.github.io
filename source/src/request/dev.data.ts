@@ -22,7 +22,7 @@ const devData = {
         time: new Date()
       }
     ]
-  }, 100)
+  }, 50)
 }
 
 export default devData
