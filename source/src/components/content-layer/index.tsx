@@ -14,11 +14,7 @@ const ContentLayer = (props: Layer) => {
         {props.main}
       </div>
       <div className={style.right}>
-        <div className={style['indepen-layer']}>
-          <div className={style.indepen}>
-            {props.right}
-          </div>
-        </div>
+        { props.right }
       </div>
       {
         props.bottom && 

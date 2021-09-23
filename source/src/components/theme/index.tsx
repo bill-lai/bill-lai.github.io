@@ -37,9 +37,12 @@ function Theme({
       scrollShowColumns.splice(index, 1)
     }
 
-    if (!isRunSetActive && column !== active) {
+    if (!isRunSetActive && active !== column) {
       isRunSetActive = true
-      Promise.resolve().then(() => setActive(column))
+      Promise.resolve().then(() => {
+        setActive(column)
+        isRunSetActive = false
+      })
     }
   }
   const columnEles = columns.map((item, i) => {
@@ -67,6 +70,7 @@ function Theme({
       }
       right={
         <Navigation
+          className={style.navigation}
           title={`${title}列表`}
           active={active}
           list={columns}

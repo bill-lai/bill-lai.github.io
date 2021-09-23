@@ -3,6 +3,7 @@
 interface CssExports {
   'columns': string;
   'desc': string;
+  'navigation': string;
   'title': string;
 }
 export const cssExports: CssExports;

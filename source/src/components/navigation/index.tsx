@@ -1,6 +1,6 @@
 import * as React from 'react'
 import style from './style.module.scss'
-import { witchParentClass, withScreenShow, WithScreenRef } from 'src/hoc'
+import { witchParentClass } from 'src/hoc'
 
 export type NavItem<T> = {
   [Key in keyof T]: T[Key]
@@ -35,7 +35,7 @@ const navIsActive = <T extends Object>(item: NavItem<T>, activeItem: NavItem<T>)
   return false
 }
 
-const NavItemContent = withScreenShow(<T extends object>(
+const NavContent = <T extends object>(
   {
     item,
     active,
@@ -72,7 +72,7 @@ const NavItemContent = withScreenShow(<T extends object>(
       }
     </li>
   )
-})
+}
 
 const NavsContent = witchParentClass(
   <T extends object>(
@@ -82,19 +82,9 @@ const NavsContent = witchParentClass(
       ...props
     }: NavsContentProps<T>
   ) => {
-    const refs: Array<WithScreenRef> = []
-    const children = list.map((item, i) => {
-      const ref: WithScreenRef = React.createRef()
-      refs.push(ref)
-      return <NavItemContent {...props} key={i} item={item} forwardRef={ref} />
-    })
-
-    React.useEffect(() => {
-      if (props.active) {
-        let index = list.indexOf(props.active)
-        index > -1 && refs[index].current?.goto()
-      }
-    })
+    const children = list.map(
+      (item, i) => <NavContent {...props} key={i} item={item} />
+    )
 
     if (attachHeight) {
       const ref: React.MutableRefObject<HTMLUListElement | null> = React.useRef(null)
@@ -119,12 +109,13 @@ const NavsContent = witchParentClass(
 )
 
 
-const Navigation = <T extends object>({
+const Navigation = witchParentClass(<T extends object>({
   title, 
   list,
   active,
   onClick
 }: NavigationProps<T>) => {
+  const ref = React.createRef<HTMLDivElement>()
   const clickHandle = onClick && ((item: NavItem<T>) => {
     onClick(
       list.some(citem => citem === item) && 
@@ -135,17 +126,21 @@ const Navigation = <T extends object>({
     )
   })
 
+  const content = NavsContent({
+    active: active,
+    list: list,
+    onClick: clickHandle,
+    className: style['top-navs']
+  })
+
   return (
-    <React.Fragment>
-      <h4 className={style.title}>{title}</h4>
-      <NavsContent
-        active={active}
-        list={list} 
-        onClick={clickHandle}
-        className={style['top-navs']} 
-      />
-    </React.Fragment>
+    <div className={style['navigation-layer']} ref={ref}>
+      <div className={style.navigation}>
+        <h4 className={style.title}>{title}</h4>
+        {content}
+      </div>
+    </div>
   )
-}
+})
 
 export default Navigation

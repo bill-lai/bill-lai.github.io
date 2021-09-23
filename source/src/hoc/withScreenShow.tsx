@@ -2,12 +2,13 @@ import * as React from 'react'
 import { Component } from './index'
 import { throttle } from 'src/util'
 
-export type WithScreenRef = React.RefObject<{ goto: Function } | null>
+export type WithScreenRef = React.RefObject<{ goto: (offset?: Offset) => void } | null>
 type ShowChange = (isShow: boolean) => void
 type WithScreenAttachProps = { onShowChange?: ShowChange, forwardRef?: WithScreenRef }
 type Ele = React.ReactElement<any>
 type Ref = React.RefObject<HTMLElement | null>
-type ViewBox = { width: number, height: number, x?: number, y?: number }
+type Offset = { x: number, y: number }
+type ViewBox = { width: number, height: number, x: number, y: number }
 type View = (Window | HTMLElement) & { __WithScreenViewBox?: ViewBox }
 
 const setSignElement = (
@@ -51,58 +52,80 @@ const GrentRefsAndCloneElement = (instance: Ele): [Ele, Array<Ref>] => {
   return [newInstance, refs]
 }
 
+
+const getBox = (view: View) => view.__WithScreenViewBox
+const setBox = (view: View, box: ViewBox)  => {
+  view.__WithScreenViewBox = box
+  Promise.resolve().then(() => delete view.__WithScreenViewBox)
+  return box
+}
+
+const getViewBoundingRect = (view: View): ViewBox => 
+  getBox(view) || setBox(
+    view, 
+    view === window 
+      ? {
+          x: view.scrollX,
+          y: view.scrollY,
+          width: view.innerWidth,
+          height: view.innerHeight
+        } 
+      : {
+        x: (view as HTMLElement).scrollLeft,
+        y: (view as HTMLElement).scrollTop,
+        width: (view as HTMLElement).clientWidth,
+        height: (view as HTMLElement).clientHeight,
+      }
+  )
+
+
+const getBoundingPageRect = (view: View, el: HTMLElement) => {
+  const base = {
+    width: el.offsetWidth,
+    height: el.offsetHeight,
+  }
+
+  if (view !== window) {
+    let parent: HTMLElement | false = el
+    let x = 0, y = 0
+    while (parent && parent !== view && parent !== document.documentElement) {
+      x += parent.offsetLeft
+      y += parent.offsetTop
+      parent = parent.offsetParent instanceof HTMLElement && parent.offsetParent
+    }
+
+    return {
+      ...base,
+      x,
+      y
+    }
+  } else {
+    const elRect = el.getBoundingClientRect()
+    const viewRect = getViewBoundingRect(view) 
+    return {
+      ...base,
+      x: viewRect.x + elRect.x,
+      y: viewRect.y + elRect.y
+    }
+  }
+}
+
+const isShowViewAppear = (view: View, el: HTMLElement) => {
+  const elRect = getBoundingPageRect(view, el)
+  const viewRect = getViewBoundingRect(view)
+
+  return !(elRect.x > viewRect.x + viewRect.width || 
+    viewRect.x > elRect.x + elRect.width ||
+    elRect.y > viewRect.y + viewRect.height ||
+    viewRect.y > elRect.y + elRect.height)
+}
+
+
 const listenElesAppear = (() => {
   const viewMaps = new Map<
     View, 
     Array<{ eles: Array<HTMLElement>, cb: ShowChange, previous?: boolean }>
   >()
-
-  const getBox = (view: View) => view.__WithScreenViewBox
-  const setBox = (view: View, box: ViewBox) => {
-    view.__WithScreenViewBox = box
-    Promise.resolve().then(() => delete view.__WithScreenViewBox)
-    return box
-  }
-
-
-  const getBoundingClientRect = (view: HTMLElement, el: HTMLElement) => {
-    let parent: HTMLElement | false = el
-    let x = 0, y = 0
-    while (parent && parent !== view && parent !== document.documentElement) {
-      x += parent.offsetTop
-      y += parent.offsetLeft
-      parent = parent.offsetParent instanceof HTMLElement && parent.offsetParent
-    }
-
-    return {
-      width: el.offsetWidth,
-      height: el.offsetHeight,
-      x,
-      y
-    }
-  }
-
-  const isShowViewAppear = (view: View, el: HTMLElement) => {
-    if (view === window) {
-      const elRect = el.getBoundingClientRect()
-
-      if (elRect.x > -elRect.width && elRect.y > -elRect.height ) {
-        if (elRect.x <= 0 && elRect.y <= 0) return true
-
-        const box = getBox(view) || setBox(view, {
-          width: view.innerWidth,
-          height: view.innerHeight
-        });
-        return elRect.x < box.width && elRect.y < box.height
-      }
-    } else {
-      // const elRect = getBoundingClientRect(view as HTMLElement, el)
-
-      return false
-    }
-
-    return false
-  }
 
   const scrollHandler = throttle(
     function (this: View) {
@@ -155,22 +178,27 @@ export const withScreenShow = <P extends object>(
     const instance = component(props as P, ref)
     if (instance && (onShowChange || forwardRef)) {
       const [newInstance, refs] = GrentRefsAndCloneElement(instance)
+      const getEles = () => refs.map(ref => ref.current)
+        .filter(Boolean) as Array<HTMLElement>
 
       if (onShowChange) {
         React.useEffect(() => 
-          listenElesAppear(
-            view, 
-            refs.map(ref => ref.current)
-              .filter(Boolean) as Array<HTMLElement>,
-            onShowChange
-          ) 
+          listenElesAppear(view, getEles(), onShowChange) 
         )
       }
 
       if (forwardRef) {
         React.useImperativeHandle(forwardRef, () => ({
-          goto() {
-            console.log('enen')
+          goto(offset?: Offset) {
+            const eles = getEles()
+            if (eles.length) {
+              const rect = getBoundingPageRect(view, eles[0])
+              if (offset) {
+                view.scrollTo(rect.x + offset.x, rect.y + offset.y)
+              } else {
+                view.scrollTo(rect.x, rect.y)
+              }
+            }
           }
         }))
       }

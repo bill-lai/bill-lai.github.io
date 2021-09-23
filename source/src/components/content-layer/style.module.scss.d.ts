@@ -2,8 +2,6 @@
 // Please do not change this file!
 interface CssExports {
   'bottom': string;
-  'indepen': string;
-  'indepen-layer': string;
   'layer': string;
   'main': string;
   'right': string;

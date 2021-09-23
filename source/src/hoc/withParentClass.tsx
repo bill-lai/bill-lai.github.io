@@ -37,7 +37,7 @@ export const witchParentClass = <
   P extends object = {},
 > (Component: Component<P>)  => {
 
-  return ({ className, ...props }: P & WitchParentAttachProps, ref: any) => {
+  return ({ className, ...props }: P & WitchParentAttachProps, ref?: any) => {
     const instance = Component(props as P, ref)
     return className && instance
       ? cloneAttachElement(instance, className)

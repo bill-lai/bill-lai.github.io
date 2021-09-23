@@ -11,3 +11,14 @@
   margin-top: 2rem;
 }
 
+.navigation {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: var(--width);
+  margin-top: var(--top);
+
+  > div {
+    padding-left: 80px;
+  }
+}
