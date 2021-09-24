@@ -169,12 +169,11 @@ const listenElesAppear = (() => {
   }
 })();
 
-
 export const withScreenShow = <P extends object>(
   component: Component<P>, 
   view: View = window
 ) => {
-  return ({ onShowChange, forwardRef, ...props }: P & WithScreenAttachProps, ref: any) => {
+  return ({ onShowChange, forwardRef, ...props }: P & WithScreenAttachProps, ref?: any) => {
     const instance = component(props as P, ref)
     if (instance && (onShowChange || forwardRef)) {
       const [newInstance, refs] = GrentRefsAndCloneElement(instance)
@@ -209,3 +208,8 @@ export const withScreenShow = <P extends object>(
     }
   }
 }
+
+class Helper <T extends object > {
+  Return = withScreenShow<T>(() => <div />)
+}
+export type FuncReturnType<T extends Component<Parameters<T>[0]>> = Helper<Parameters<T>>['Return']

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import style from './style.module.scss'
-import { witchParentClass } from 'src/hoc'
+import { witchParentClass, withScreenShow, FuncReturnType } from 'src/hoc'
 
 export type NavItem<T> = {
   [Key in keyof T]: T[Key]
@@ -15,9 +15,9 @@ export type baseNavProps<T> = {
   isChildren?: boolean
 }
 export type navArgs<T> = NavItem<T> | null
-export type NavContentProps<T> = baseNavProps<T> & { item: NavItem<T> }
-export type NavsContentProps<T> = baseNavProps<T> & { list: Navs<T>, attachHeight?: boolean }
-export type NavigationProps<T> = Omit<NavsContentProps<T>, 'onClick'|'isChildren'> & { 
+export type NavContentProps<T> = baseNavProps<T> & { item: NavItem<T>, parent: HTMLDivElement }
+export type NavsContentProps<T> = baseNavProps<T> & { list: Navs<T>, attachHeight?: boolean, parent: HTMLDivElement }
+export type NavigationProps<T> = Omit<NavsContentProps<T>, 'onClick'|'isChildren'|'parent'> & { 
   title: string, 
   onClick?: (args: navArgs<T>) => void 
 }
@@ -40,6 +40,7 @@ const NavContent = <T extends object>(
     item,
     active,
     isChildren,
+    parent,
     onClick
   }: NavContentProps<T>
 ) => {
@@ -65,6 +66,7 @@ const NavContent = <T extends object>(
           attachHeight={!isChildren}
           list={item.children} 
           isChildren={true}
+          parent={parent}
           active={active}
           onClick={onClick} 
           className={ style['child-navs'] } 
@@ -79,11 +81,12 @@ const NavsContent = witchParentClass(
     { 
       list,
       attachHeight = false,
+      parent,
       ...props
     }: NavsContentProps<T>
   ) => {
     const children = list.map(
-      (item, i) => <NavContent {...props} key={i} item={item} />
+      (item, i) => <NavContent {...props} parent={parent} key={i} item={item} />
     )
 
     if (attachHeight) {
@@ -109,13 +112,33 @@ const NavsContent = witchParentClass(
 )
 
 
+const getNavsContent = ((): any => {
+  type WithNavsContentType = FuncReturnType<typeof NavsContent>
+  
+  const map = new Map<HTMLElement, WithNavsContentType>()
+  
+  return (dom: HTMLElement): WithNavsContentType => {
+    let FC = map.get(dom)
+    if (FC) {
+      return FC
+    } else {
+      FC = withScreenShow(NavsContent as any)
+      map.set(dom, FC)
+      return FC
+    }
+  }
+})();
+
+
 const Navigation = witchParentClass(<T extends object>({
   title, 
   list,
   active,
   onClick
 }: NavigationProps<T>) => {
-  const ref = React.createRef<HTMLDivElement>()
+  const ref = React.useRef() as React.MutableRefObject<HTMLDivElement>;
+  const [el, setEl] = React.useState(ref.current)
+
   const clickHandle = onClick && ((item: NavItem<T>) => {
     onClick(
       list.some(citem => citem === item) && 
@@ -126,9 +149,14 @@ const Navigation = witchParentClass(<T extends object>({
     )
   })
 
-  const content = NavsContent({
+  React.useEffect(() => {
+    
+  })
+
+  const content = ref.current && NavsContent({
     active: active,
     list: list,
+    parent: ref.current,
     onClick: clickHandle,
     className: style['top-navs']
   })

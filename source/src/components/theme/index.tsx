@@ -3,8 +3,9 @@ import ColumnItem from '../column-item'
 import style from './style.module.scss'
 import { Columns } from 'src/request'
 import Layer from '../content-layer'
-import Navigation, { navArgs } from '../navigation'
-import { withScreenShow, WithScreenRef } from 'src/hoc/index'
+import Navigation from '../navigation'
+import { withScreenShow } from 'src/hoc/index'
+import { debounce } from 'src/util'
 
 const ScrollColumnItem = withScreenShow(ColumnItem)
 
@@ -19,16 +20,17 @@ function Theme({
   title, 
   desc
 }: ThemeProps) {
-  let isRunSetActive = false
-  const columnRefs: Array<WithScreenRef> = []
-  const scrollShowColumns: Columns = []
   const [active, setActive] = React.useState<Columns[0] | null>(null)
-  const clickNav = (column: navArgs<Columns[0]>) => {
-    if (column) {
-      window.location.hash = column.id.toString()
+
+  const scrollShowColumns: Columns = []
+  React.useEffect(() => () => {
+    scrollShowColumns.length = 0
+  })
+  const setShowColumnsActive = debounce(() => {
+    if (scrollShowColumns.length && (!active || !scrollShowColumns.includes(active))) {
+      setActive(scrollShowColumns[0])
     }
-    setActive(column)
-  }
+  })
   const columnShowChange = (column: Columns[0], isShow: boolean) => {
     let index = scrollShowColumns.indexOf(column)
     if (index === -1 && isShow) {
@@ -36,26 +38,15 @@ function Theme({
     } else if (index > -1 && !isShow) {
       scrollShowColumns.splice(index, 1)
     }
-
-    if (!isRunSetActive && active !== column) {
-      isRunSetActive = true
-      Promise.resolve().then(() => {
-        setActive(column)
-        isRunSetActive = false
-      })
-    }
+    setShowColumnsActive()
   }
-  const columnEles = columns.map((item, i) => {
-    const ref: WithScreenRef = React.createRef()
-    columnRefs[i] = ref
-
-    return <ScrollColumnItem 
+  const columnEles = columns.map((item, i) => 
+    <ScrollColumnItem 
       onShowChange={(isShow) => columnShowChange(item, isShow)} 
-      forwardRef={ref}
       key={i} 
       {...item} 
     />
-  })
+  )
 
   return (
     <Layer 
@@ -74,7 +65,12 @@ function Theme({
           title={`${title}列表`}
           active={active}
           list={columns}
-          onClick={clickNav}
+          onClick={
+            (column) => {
+              column && (window.location.hash = column.id.toString())
+              setActive(column)
+            }
+          }
         />
       }
     />

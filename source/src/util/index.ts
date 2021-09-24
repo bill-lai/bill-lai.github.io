@@ -12,3 +12,17 @@ export const throttle = (fn: Function, delay: number = 160) => {
     }
   }
 }
+
+// 防抖
+export const debounce = (fn: Function, delay: number = 160) => {
+  let timeout: NodeJS.Timeout
+
+  return function<Args extends Array<any>, This>(
+    this: This, ...args: Args
+  ) {
+    clearTimeout(timeout)
+    setTimeout(() => {
+      fn.apply(this, ...args)
+    }, delay)
+  }
+}
