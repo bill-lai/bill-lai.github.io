@@ -1,6 +1,6 @@
 import * as React from 'react'
 import style from './style.module.scss'
-import { witchParentClass, withScreenShow, FuncReturnType } from 'src/hoc'
+import { witchParentClass, WithScreenAttachProps, WithScreenRef, withScreenShow } from 'src/hoc'
 
 export type NavItem<T> = {
   [Key in keyof T]: T[Key]
@@ -16,7 +16,7 @@ export type baseNavProps<T> = {
 }
 export type navArgs<T> = NavItem<T> | null
 export type NavContentProps<T> = baseNavProps<T> & { item: NavItem<T>, parent: HTMLDivElement }
-export type NavsContentProps<T> = baseNavProps<T> & { list: Navs<T>, attachHeight?: boolean, parent: HTMLDivElement }
+export type NavsContentProps<T> = baseNavProps<T> & { list: Navs<T>, attachHeight?: boolean, parent?: HTMLDivElement }
 export type NavigationProps<T> = Omit<NavsContentProps<T>, 'onClick'|'isChildren'|'parent'> & { 
   title: string, 
   onClick?: (args: navArgs<T>) => void 
@@ -76,18 +76,47 @@ const NavContent = <T extends object>(
   )
 }
 
+
+type WithNavContent = <T extends object>({ onShowChange, forwardRef, ...props }: baseNavProps<T> & {
+  item: NavItem<T>;
+  parent: HTMLDivElement;
+} & WithScreenAttachProps, ref?: any) => React.ReactElement<any, string | React.JSXElementConstructor<any>> | null
+
+const getNavContent = (dom: HTMLElement & { __scrollComponent?: WithNavContent }) => {
+  if (!dom.__scrollComponent) {
+    dom.__scrollComponent = withScreenShow(NavContent, dom) as WithNavContent
+  }
+  return dom.__scrollComponent
+}
+
 const NavsContent = witchParentClass(
   <T extends object>(
     { 
       list,
       attachHeight = false,
       parent,
+      active,
       ...props
     }: NavsContentProps<T>
   ) => {
-    const children = list.map(
-      (item, i) => <NavContent {...props} parent={parent} key={i} item={item} />
-    )
+    const refs: Array<WithScreenRef> = []
+
+    React.useEffect(() => {
+      let index 
+      if (active && (index = list.indexOf(active)) > -1 && refs[index]) {
+        refs[index].current?.goto({y: 'center'})
+      }
+    })
+
+    if (!parent) return null;
+
+
+    const ItemContent = parent ? getNavContent(parent) : NavContent
+    const children = list.map((item, i) => {
+      const itemRef: WithScreenRef = React.createRef()
+      refs.push(itemRef)
+      return <ItemContent {...props} active={active} parent={parent} key={i} item={item} forwardRef={itemRef} />
+    })
 
     if (attachHeight) {
       const ref: React.MutableRefObject<HTMLUListElement | null> = React.useRef(null)
@@ -112,23 +141,6 @@ const NavsContent = witchParentClass(
 )
 
 
-const getNavsContent = ((): any => {
-  type WithNavsContentType = FuncReturnType<typeof NavsContent>
-  
-  const map = new Map<HTMLElement, WithNavsContentType>()
-  
-  return (dom: HTMLElement): WithNavsContentType => {
-    let FC = map.get(dom)
-    if (FC) {
-      return FC
-    } else {
-      FC = withScreenShow(NavsContent as any)
-      map.set(dom, FC)
-      return FC
-    }
-  }
-})();
-
 
 const Navigation = witchParentClass(<T extends object>({
   title, 
@@ -150,20 +162,21 @@ const Navigation = witchParentClass(<T extends object>({
   })
 
   React.useEffect(() => {
-    
-  })
+    const el = ref.current
+    el && setEl(el)
+  }, [ref])
 
-  const content = ref.current && NavsContent({
+  const content = NavsContent({
     active: active,
     list: list,
-    parent: ref.current,
+    parent: el,
     onClick: clickHandle,
     className: style['top-navs']
   })
 
   return (
-    <div className={style['navigation-layer']} ref={ref}>
-      <div className={style.navigation}>
+    <div className={style['navigation-layer']}>
+      <div className={style.navigation} ref={ref}>
         <h4 className={style.title}>{title}</h4>
         {content}
       </div>

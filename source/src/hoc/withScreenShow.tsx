@@ -3,11 +3,11 @@ import { Component } from './index'
 import { throttle } from 'src/util'
 
 export type WithScreenRef = React.RefObject<{ goto: (offset?: Offset) => void } | null>
+export type WithScreenAttachProps = { onShowChange?: ShowChange, forwardRef?: WithScreenRef }
 type ShowChange = (isShow: boolean) => void
-type WithScreenAttachProps = { onShowChange?: ShowChange, forwardRef?: WithScreenRef }
 type Ele = React.ReactElement<any>
 type Ref = React.RefObject<HTMLElement | null>
-type Offset = { x: number, y: number }
+type Offset = { x?: number | 'center', y?: number | 'center' }
 type ViewBox = { width: number, height: number, x: number, y: number }
 type View = (Window | HTMLElement) & { __WithScreenViewBox?: ViewBox }
 
@@ -78,6 +78,17 @@ const getViewBoundingRect = (view: View): ViewBox =>
       }
   )
 
+const getElPagePos = (el: HTMLElement, target?: HTMLElement) => {
+  let parent: HTMLElement | false = el
+  let x = 0, y = 0
+  while (parent && parent !== target && parent !== document.documentElement) {
+    x += parent.offsetLeft
+    y += parent.offsetTop
+    parent = parent.offsetParent as HTMLElement
+  }
+
+  return {x, y, target: parent}
+}
 
 const getBoundingPageRect = (view: View, el: HTMLElement) => {
   const base = {
@@ -85,15 +96,15 @@ const getBoundingPageRect = (view: View, el: HTMLElement) => {
     height: el.offsetHeight,
   }
 
+  // console.log(view)
   if (view !== window) {
-    let parent: HTMLElement | false = el
-    let x = 0, y = 0
-    while (parent && parent !== view && parent !== document.documentElement) {
-      x += parent.offsetLeft
-      y += parent.offsetTop
-      parent = parent.offsetParent instanceof HTMLElement && parent.offsetParent
-    }
+    let { x, y, target } = getElPagePos(el, view as HTMLElement)
 
+    if (target !== view) {
+      let { x: vx, y: vy} = getElPagePos(view as HTMLElement)
+      x -= vx
+      y -= vy
+    }
     return {
       ...base,
       x,
@@ -132,8 +143,11 @@ const listenElesAppear = (() => {
       if (!viewMaps.has(this)) return;
       const maps = viewMaps.get(this)
 
+      
+
       maps!.forEach(map => {
         const { eles, cb, previous } = map
+        // console.log(eles)
         const isShow = eles.some(ele => isShowViewAppear(this, ele))
         if (isShow !== !!previous) {
           cb(isShow)
@@ -191,12 +205,19 @@ export const withScreenShow = <P extends object>(
           goto(offset?: Offset) {
             const eles = getEles()
             if (eles.length) {
-              const rect = getBoundingPageRect(view, eles[0])
-              if (offset) {
-                view.scrollTo(rect.x + offset.x, rect.y + offset.y)
-              } else {
-                view.scrollTo(rect.x, rect.y)
-              }
+              const elRect = getBoundingPageRect(view, eles[0])
+              const viewRect = getViewBoundingRect(view)
+              const offsetX = offset
+                ? offset.x === 'center' 
+                  ? viewRect.width / 2
+                  : offset.x ? offset.x : 0
+                : 0
+              const offsetY = offset
+                ? offset.y === 'center' 
+                  ? viewRect.height / 2
+                  : offset.y ? offset.y : 0
+                : 0
+              view.scrollTo(elRect.x - offsetX, elRect.y - offsetY)
             }
           }
         }))
@@ -208,8 +229,3 @@ export const withScreenShow = <P extends object>(
     }
   }
 }
-
-class Helper <T extends object > {
-  Return = withScreenShow<T>(() => <div />)
-}
-export type FuncReturnType<T extends Component<Parameters<T>[0]>> = Helper<Parameters<T>>['Return']

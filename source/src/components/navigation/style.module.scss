@@ -70,7 +70,7 @@
       top: 0;
       bottom: 0;
       width: 0;
-      background-color: #155799;
+      background-color: var(--link-color);
       margin-left: -20px;
       transition: width .1s linear;
     }

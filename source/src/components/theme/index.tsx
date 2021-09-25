@@ -52,8 +52,8 @@ function Theme({
     <Layer 
       main={
         <React.Fragment>
-          <h1 className={style.title}>{title}</h1>
-          <p className={style.desc}>{desc}</p>
+          <h1 className="main-title">{title}</h1>
+          <p className="desc">{desc}</p>
           <div className={style.columns}>
             {columnEles}
           </div>

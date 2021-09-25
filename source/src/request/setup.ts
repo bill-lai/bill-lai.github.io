@@ -98,7 +98,7 @@ const setupAxios = <
   axios.interceptors.request.use(config => {
     if (!config.url || !urls.includes(config.url)) {
       stopRequest();
-      return config
+      return config 
     }
 
     if (notLoadUrls.includes(config.url)) {

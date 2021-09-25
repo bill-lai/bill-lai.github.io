@@ -3,7 +3,7 @@ import style from './style.module.scss'
 
 type Layer = {
   main: React.ReactElement,
-  right: React.ReactElement,
+  right?: React.ReactElement,
   bottom?: React.ReactElement
 }
 

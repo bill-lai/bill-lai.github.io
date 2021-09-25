@@ -9,14 +9,14 @@ function ColumnItem(props: Column) {
   const articles = props.articles.map(({title, id, time}, i) =>(
     <li key={i}>
       <Link to={id.toString()}>{title}</Link>
-      <span>{time.toUTCString()}</span>
+      <span className="marker">{time.toUTCString()}</span>
     </li>
   ))
 
   return (
     <div className={style.layer}>
-      <h2 className={style.title} id={`${props.id}`}>{props.title}</h2>
-      { props.desc && <p className={style.desc}>{props.desc}</p>  }
+      <h2 className="vice-title" id={`${props.id}`}>{props.title}</h2>
+      { props.desc && <p className="desc">{props.desc}</p>  }
       <ul className={style['articles']}>
         { articles }
       </ul>

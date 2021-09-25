@@ -8,7 +8,7 @@ function Special() {
   React.useEffect(() => {
     axios.get(config.getColumnList)
       .then(setColumns)
-  }, [columns])
+  }, [])
 
   return (
     <Theme 

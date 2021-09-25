@@ -2,9 +2,7 @@
 // Please do not change this file!
 interface CssExports {
   'articles': string;
-  'desc': string;
   'layer': string;
-  'title': string;
 }
 export const cssExports: CssExports;
 export default cssExports;

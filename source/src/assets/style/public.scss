@@ -1,0 +1,32 @@
+
+.main-title {
+  margin-bottom: 1.78rem;
+  font-size: 2rem;
+}
+
+.vice-title {
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+.desc {
+  font-size: 1.14rem;
+}
+
+.vice-title,
+.desc {
+  margin-top: 1rem;
+}
+
+.marker {
+  color: #555;
+  font-size: 12px;
+  margin-left: 5px;
+  margin-right: 5px;
+  &::before {
+    content: '(';
+  }
+  &::after {
+    content: ')';
+  }
+}
