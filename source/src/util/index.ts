@@ -35,7 +35,7 @@ export const debounce = (fn: Function, delay: number = 160) => {
 export type MarkedNav = { leave: number, title: string, children: MarledNavs }
 export type MarledNavs = Array<MarkedNav>
 export const analysisMarked = (() => {
-  const headLeaveRG = /^(\#*)/
+  const headLeaveRG = /^(#*)/
   const navs: MarledNavs = []
 
   const addNav = (navs: MarledNavs, targetNav: MarkedNav) => {

@@ -1,11 +1,11 @@
 import * as React from 'react'
-import style from './style.module.scss'
 import { axios, config, Article } from 'src/request'
 import { useParams } from 'react-router-dom'
 import ContentLayer from 'src/components/content-layer'
 import { analysisMarked, MarledNavs } from 'src/util'
 import './marked.scss'
 import { Navigation, Navs } from 'src/components/navigation'
+import { withScreenShow } from 'src/hoc'
 
 type NavItem = {
   title: string,
@@ -45,12 +45,32 @@ const GetArticleState = () => {
   }
 }
 
+const MarkerBody = withScreenShow(({html}: { html: string }) => 
+  <div 
+    className="article-body" 
+    dangerouslySetInnerHTML={{__html: html}} 
+  />
+)
+
 const ArticleInfo = () => {
   const { article, markedData } = GetArticleState()
   const [active, setActive] = React.useState<NavItem | null>(null)
 
   if (!article || !markedData) return null;
   
+  const showTitleEls: Array<HTMLElement> = []
+  const titleShowScreenChange = (isShow: boolean, dom: HTMLElement) => {
+    isShow && showTitleEls.push(dom)
+
+
+    const item = markedData.dirs.find(({title}) => title === dom.innerHTML)
+    console.log(item)
+    if (item) {
+      setActive(item)
+    }
+  }
+
+
   return (
     <ContentLayer 
       main={ 
@@ -59,9 +79,10 @@ const ArticleInfo = () => {
             {article.title}
             <span className="marker">{article.time.toString()}</span>
           </h1>
-          <div 
-            className="article-body" 
-            dangerouslySetInnerHTML={{__html: markedData.html}} 
+          <MarkerBody 
+            html={markedData.html}
+            selector="h2,h3"
+            onShowChange={titleShowScreenChange}
           />
         </React.Fragment>
        }

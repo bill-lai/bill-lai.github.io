@@ -82,7 +82,7 @@ const NavContent = <T extends object>(
 type WithNavContent = <T extends object>({ onShowChange, forwardRef, ...props }: baseNavProps<T> & {
   item: NavItem<T>;
   parent: HTMLDivElement;
-} & WithScreenAttachProps, ref?: any) => React.ReactElement<any, string | React.JSXElementConstructor<any>> | null
+} & WithScreenAttachProps<void>, ref?: any) => React.ReactElement<any, string | React.JSXElementConstructor<any>> | null
 
 const getNavContent = (dom: HTMLElement & { __scrollComponent?: WithNavContent }) => {
   if (!dom.__scrollComponent) {

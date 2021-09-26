@@ -3,8 +3,12 @@ import { Component } from './index'
 import { throttle } from 'src/util'
 
 export type WithScreenRef = React.RefObject<{ goto: (offset?: Offset) => void } | null>
-export type WithScreenAttachProps = { onShowChange?: ShowChange, forwardRef?: WithScreenRef }
-type ShowChange = (isShow: boolean) => void
+export type WithScreenAttachProps<T> = { 
+  onShowChange?: ShowChange<T extends string ? true : false>, 
+  selector?: T, 
+  forwardRef?: WithScreenRef 
+}
+type ShowChange<T extends boolean> = (isShow: boolean, dom: T extends true ? HTMLElement : void) => void
 type Ele = React.ReactElement<any>
 type Ref = React.RefObject<HTMLElement | null>
 type Offset = { x?: number | 'center', y?: number | 'center' }
@@ -133,9 +137,15 @@ const isShowViewAppear = (view: View, el: HTMLElement) => {
 
 
 const listenElesAppear = (() => {
+  type MapVal = { 
+    eles: Array<HTMLElement & { __previous?: boolean  }>, 
+    cb: ShowChange<MapVal['isDispersion']>, 
+    isDispersion: boolean,
+    previous?: boolean 
+  }
   const viewMaps = new Map<
     View, 
-    Array<{ eles: Array<HTMLElement>, cb: ShowChange, previous?: boolean }>
+    Array<MapVal>
   >()
 
   const scrollHandler = throttle(
@@ -143,22 +153,30 @@ const listenElesAppear = (() => {
       if (!viewMaps.has(this)) return;
       const maps = viewMaps.get(this)
 
-      
-
       maps!.forEach(map => {
-        const { eles, cb, previous } = map
-        // console.log(eles)
-        const isShow = eles.some(ele => isShowViewAppear(this, ele))
-        if (isShow !== !!previous) {
-          cb(isShow)
-          map.previous = isShow
+        const { eles, cb, previous, isDispersion } = map
+        
+        for (let ele of eles) {
+          const isShow = isShowViewAppear(this, ele)
+          const prevShow = isDispersion ? ele.__previous : previous
+
+          if (isShow !== !!prevShow)  {
+            if (isDispersion) {
+              cb(isShow, ele)
+              ele.__previous = isShow
+            } else {
+              cb(isShow)
+              map.previous = isShow
+              return;
+            }
+          }
         }
       })
     }
   )
 
-  return (view: View, eles: Array<HTMLElement>, onShowChange: ShowChange) => {
-    const item = { eles, cb: onShowChange }
+  return <T extends boolean>(view: View, eles: Array<HTMLElement>, onShowChange: ShowChange<T>, isDispersion: T) => {
+    const item = { eles, cb: onShowChange, isDispersion }
     let maps = viewMaps.get(view)
     
     if (!maps) {
@@ -187,16 +205,28 @@ export const withScreenShow = <P extends object>(
   component: Component<P>, 
   view: View = window
 ) => {
-  return ({ onShowChange, forwardRef, ...props }: P & WithScreenAttachProps, ref?: any) => {
+  return <T extends string|void>({ onShowChange, forwardRef, selector, ...props }: P & WithScreenAttachProps<T>, ref?: any) => {
     const instance = component(props as P, ref)
     if (instance && (onShowChange || forwardRef)) {
       const [newInstance, refs] = GrentRefsAndCloneElement(instance)
       const getEles = () => refs.map(ref => ref.current)
         .filter(Boolean) as Array<HTMLElement>
 
+      
       if (onShowChange) {
         React.useEffect(() => 
-          listenElesAppear(view, getEles(), onShowChange) 
+          listenElesAppear(
+            view, 
+            selector 
+              ? getEles().reduce(
+                (t, c) => 
+                  t.concat(Array.from(c.querySelectorAll(selector))), 
+                []
+              ) 
+              : getEles(), 
+            onShowChange, 
+            !!selector
+          ) 
         )
       }
 
