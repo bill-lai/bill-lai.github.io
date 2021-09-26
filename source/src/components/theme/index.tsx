@@ -15,23 +15,22 @@ type ThemeProps = {
   columns: Columns
 }
 
-function Theme({ 
-  columns, 
-  title, 
-  desc
-}: ThemeProps) {
-  const [active, setActive] = React.useState<Columns[0] | null>(null)
+export const ScrollGroupMange = <T extends object>() => {
+  const [active, setActive] = React.useState<T | null>(null)
+  
+  const scrollShowColumns: Array<T> = []
 
-  const scrollShowColumns: Columns = []
   React.useEffect(() => () => {
     scrollShowColumns.length = 0
   })
+
   const setShowColumnsActive = debounce(() => {
     if (scrollShowColumns.length && (!active || !scrollShowColumns.includes(active))) {
       setActive(scrollShowColumns[0])
     }
   })
-  const columnShowChange = (column: Columns[0], isShow: boolean) => {
+  
+  const columnShowChange = (column: T, isShow: boolean) => {
     let index = scrollShowColumns.indexOf(column)
     if (index === -1 && isShow) {
       scrollShowColumns.push(column)
@@ -40,6 +39,22 @@ function Theme({
     }
     setShowColumnsActive()
   }
+
+  return {
+    active,
+    setActive,
+    columnShowChange
+  }
+}
+
+
+export function Theme({ 
+  columns, 
+  title, 
+  desc
+}: ThemeProps) {
+  const { active, setActive, columnShowChange } = ScrollGroupMange<Columns[0]>()
+
   const columnEles = columns.map((item, i) => 
     <ScrollColumnItem 
       onShowChange={(isShow) => columnShowChange(item, isShow)} 
@@ -61,7 +76,7 @@ function Theme({
       }
       right={
         <Navigation
-          className={style.navigation}
+          className="navigation"
           title={`${title}列表`}
           active={active}
           list={columns}

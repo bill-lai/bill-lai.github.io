@@ -23,7 +23,12 @@
       padding-right: 7px;
       padding-left: 7px;
       font-weight: 700;
-      line-height: 3;
+      line-height: 1.5;
+      display: block;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      line-height: 3em;
 
       i {
         display: inline-block;
@@ -76,15 +81,19 @@
     }
   }
 
-  > li:not(.active) > span {
-    font-weight: 400;
-  }
+  > li {
+    margin-top: 5px;
 
-  > li.active > span {
-    font-weight: 700;
+    &:not(.active) > span {
+      font-weight: 400;
+    }
 
-    &::before {
-      width: 4px;
+    &.active > span {
+      font-weight: 700;
+  
+      &::before {
+        width: 4px;
+      }
     }
   }
 }
@@ -92,12 +101,14 @@
 
 .top-navs > li {
   > .child-navs {
-    transition: max-height .3s linear;
+    transition: all .2s ease;
     overflow: hidden;
-    margin-left: -20px;
+    // margin-left: -20px;
+    padding-bottom: 10px;
   }
 
   &:not(.active) > .child-navs {
     max-height: 0 !important;
+    padding-bottom: 0;
   }
 }

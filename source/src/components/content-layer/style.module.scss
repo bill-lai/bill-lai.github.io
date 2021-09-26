@@ -10,10 +10,11 @@
   }  
 
   .right {
-    --width: 240px;
+    --width: 340px;
     flex: none;
     width: var(--width);
     position: relative;
+    border-left: 1px solid #ececec;
   }
 
   .bottom {

@@ -3,12 +3,13 @@ import style from './style.module.scss'
 import { Column } from 'src/request'
 import { Link } from 'react-router-dom'
 import { witchParentClass } from 'src/hoc'
+import { queryRoutePath } from 'src/router'
 
 
 function ColumnItem(props: Column) {
   const articles = props.articles.map(({title, id, time}, i) =>(
     <li key={i}>
-      <Link to={id.toString()}>{title}</Link>
+      <Link className="wlink" to={queryRoutePath('article', { id })}>{title}</Link>
       <span className="marker">{time.toUTCString()}</span>
     </li>
   ))

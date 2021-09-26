@@ -2,6 +2,11 @@
 .main-title {
   margin-bottom: 1.78rem;
   font-size: 2rem;
+
+  span {
+    float: right;
+    max-width: 200px;
+  }
 }
 
 .vice-title {
@@ -28,5 +33,31 @@
   }
   &::after {
     content: ')';
+  }
+}
+
+.navigation {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: var(--width);
+
+  > div {
+    padding-top: var(--top);
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+}
+
+.wlink {
+  text-decoration:none !important; 
+  color: var(--link-color); 
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px dashed currentColor;
+  transition: color .3s ease;
+
+  &:hover {
+    color: #157b75;
   }
 }

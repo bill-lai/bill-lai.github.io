@@ -2,6 +2,7 @@ import * as React from 'react'
 import Home from '../views/home'
 import Special from '../views/special'
 import Archive from '../views/archive'
+import Article from '../views/article'
 import { generatePath as toolGeneratePath } from 'react-router-dom'
 import { ExtractRouteParams } from 'react-router'
 import {
@@ -36,6 +37,11 @@ export const router: Routes = normalize([
     path: '/archive',
     Component: Archive
   },
+  {
+    name: 'article',
+    path: '/article/:id',
+    Component: Article
+  },
   
 ])
 
@@ -45,14 +51,11 @@ export const homePath = home ? home.path : ''
 export const queryRoute = (name: string): Route | undefined => 
   toolQueryRoute(router, name) || home
 
-export const queryRoutePath = (name: string): string => {
+export const queryRoutePath = (name: string, params?: ExtractRouteParams<string>): string => {
   const route = queryRoute(name)
-  return route ? route.path : homePath
-}
+  const path = route ? route.path : homePath
 
-export type paramsType = ExtractRouteParams<string>
-
-export const generatePath = (name: string, params: paramsType) => {
-  const path = queryRoutePath(name)
-  return path ? toolGeneratePath(path, params) : home
+  return params 
+    ? toolGeneratePath(path, params)
+    : path
 }

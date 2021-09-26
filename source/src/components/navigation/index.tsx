@@ -10,7 +10,7 @@ export type NavItem<T> = {
 }
 export type Navs<T> = Array<NavItem<T>>
 export type baseNavProps<T> = {
-  active: NavItem<T> | null,
+  active?: NavItem<T> | null,
   onClick?: (args: NavItem<T>) => void,
   isChildren?: boolean
 }
@@ -53,15 +53,17 @@ const NavContent = <T extends object>(
     : clickHandle 
       ? null
       : item
-  const Suffix = !isChildren && item.children 
+  const Suffix = !isChildren && item.children && !!item.children.length
     && <i className="iconfont icon-arrow_down" />
+
+  // console.log(active, item, active === item, isActive)
 
   return (
     <li className={isActive ? style.active : ''}>
       <span onClick={clickHandle}>
         {item.title} {Suffix}
       </span>
-      {item.children && 
+      {item.children && !!item.children.length &&
         <NavsContent
           attachHeight={!isChildren}
           list={item.children} 
@@ -142,7 +144,7 @@ const NavsContent = witchParentClass(
 
 
 
-const Navigation = witchParentClass(<T extends object>({
+export const Navigation = witchParentClass(<T extends object>({
   title, 
   list,
   active,
@@ -173,6 +175,8 @@ const Navigation = witchParentClass(<T extends object>({
     onClick: clickHandle,
     className: style['top-navs']
   })
+
+  console.log('---', active && list.indexOf(active))
 
   return (
     <div className={style['navigation-layer']}>
