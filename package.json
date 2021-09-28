@@ -9,13 +9,6 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
-    "@types/jest": "^27.0.1",
-    "@types/marked": "^3.0.1",
-    "@types/prismjs": "^1.16.6",
-    "@types/react": "^17.0.20",
-    "@types/react-dom": "^17.0.9",
-    "@types/react-redux": "^7.1.18",
-    "@types/react-router-dom": "^5.1.8",
     "@typescript-eslint/eslint-plugin": "^4.5.0",
     "@typescript-eslint/parser": "^4.5.0",
     "axios": "^0.21.4",
@@ -86,7 +79,9 @@
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
-    "test": "node scripts/test.js"
+    "test": "node scripts/test.js",
+    "deploy": "node scripts/deploy.js",
+    "coll": "node server/collection.js"
   },
   "eslintConfig": {
     "extends": [
@@ -164,6 +159,15 @@
     ]
   },
   "devDependencies": {
-    "@types/node": "^16.9.1"
+    "@types/jest": "^27.0.1",
+    "@types/marked": "^3.0.1",
+    "@types/node": "^16.9.1",
+    "@types/prismjs": "^1.16.6",
+    "@types/react": "^17.0.20",
+    "@types/react-dom": "^17.0.9",
+    "@types/react-redux": "^7.1.18",
+    "@types/react-router-dom": "^5.1.8",
+    "chokidar": "^3.5.2",
+    "jsdom": "^17.0.0"
   }
 }

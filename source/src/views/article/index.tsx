@@ -2,7 +2,7 @@ import * as React from 'react'
 import { axios, config, Article } from 'src/request'
 import { useParams } from 'react-router-dom'
 import ContentLayer from 'src/components/content-layer'
-import { analysisMarked, MarledNavs } from 'src/util'
+import { analysisMarked, MarledNavs, debounce } from 'src/util'
 import './marked.scss'
 import { Navigation, Navs } from 'src/components/navigation'
 import { withScreenShow } from 'src/hoc'
@@ -19,6 +19,19 @@ const navsToDirs = (navs: MarledNavs): Navs<NavItem> => {
     id: item.title.toLowerCase(),
     children: navsToDirs(item.children)
   }))
+}
+const findDir = (dirs: Array<NavItem>, title: string): NavItem | null => {
+  for (let dir of dirs) {
+    if (dir.title === title) {
+      return dir
+    } else {
+      const cdir = findDir(dir.children, title)
+      if (cdir) {
+        return cdir
+      }
+    }
+  }
+  return null
 }
 
 const GetArticleState = () => {
@@ -59,15 +72,23 @@ const ArticleInfo = () => {
   if (!article || !markedData) return null;
   
   const showTitleEls: Array<HTMLElement> = []
-  const titleShowScreenChange = (isShow: boolean, dom: HTMLElement) => {
-    isShow && showTitleEls.push(dom)
-
-
-    const item = markedData.dirs.find(({title}) => title === dom.innerHTML)
-    console.log(item)
-    if (item) {
-      setActive(item)
+  const scrollChangeActive = debounce(() => {
+    if (showTitleEls.length) {
+      const title = showTitleEls[0].textContent
+      const item = title && findDir(markedData.dirs, title)
+      item && setActive(item)
+      showTitleEls.length = 0
     }
+  })
+
+  const titleShowScreenChange = (isShow: boolean, dom: HTMLElement) => {
+    if (isShow) {
+      showTitleEls.push(dom)
+    } else {
+      const index = showTitleEls.indexOf(dom)
+      index > -1 && showTitleEls.splice(index, 1)
+    }
+    scrollChangeActive()
   }
 
 

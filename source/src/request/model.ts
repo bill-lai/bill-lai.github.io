@@ -5,9 +5,15 @@ export type ArticleBase = {
   time: Date
 }
 
+type ArticleDir = { 
+  title: string, 
+  children: Array<ArticleDir> 
+} 
+
 export type Article = ArticleBase & {
   head?: string,
   body: string,
+  dirs: Array<ArticleDir>
   foot?: string,
 }
 

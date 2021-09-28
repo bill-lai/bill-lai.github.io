@@ -67,6 +67,28 @@ export type AxiosStatic<Config, URLS = keyof Config> =
   }
 
 
+const place = /(?::([^/]*))/g
+
+const equalUrl = (tempUrl: string, url: string) => {
+  const urlRgStr = tempUrl.replace(/\//g,'\\/')
+    .replace(place, () => `(?:[^/]*)`)
+  
+  return new RegExp(urlRgStr).test(url)
+}
+
+const gendUrl = (tempUrl: string, params: { [key: string]: any}) => {
+  let url = ''
+  let preIndex = 0
+  let m
+  while ((m = place.exec(tempUrl))) {
+    url += tempUrl.substring(preIndex, m.index) + (params[m[1]] || 'null')
+    preIndex = m.index + m[0].length
+  }
+  url += tempUrl.substr(preIndex)
+  return url
+}
+
+
 let isSetup = false
 const setupAxios = <
   Interface, 
@@ -79,6 +101,7 @@ const setupAxios = <
 ) => {
   if (isSetup) return axios as unknown as RetAxios
 
+
   const urls = Object.values(urlMaps)
   
   const stopRequest = () => {
@@ -88,14 +111,22 @@ const setupAxios = <
 
   const errorHandler = (res: BaseAxiosResponse, msg: string = '出了点小问题') => {
     if (process.env.NODE_ENV === 'development') {
-      if (res.config && res.config.url && (res.config.url in devData)) {
-        return (devData as any)[res.config.url]
+
+      if (res.config && res.config.url) {
+        let key = Object.keys(devData).find(tempUrl => equalUrl(tempUrl, res.config.url as string))
+        if (key) {
+          return (devData as any)[key]
+        }
       }
     }
     return Promise.reject(res)
   }
 
   axios.interceptors.request.use(config => {
+    if (config.url) {
+      config.url = gendUrl(config.url, config.params)
+    }
+
     if (!config.url || !urls.includes(config.url)) {
       stopRequest();
       return config 

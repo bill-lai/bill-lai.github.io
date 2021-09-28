@@ -176,8 +176,6 @@ export const Navigation = witchParentClass(<T extends object>({
     className: style['top-navs']
   })
 
-  console.log('---', active && list.indexOf(active))
-
   return (
     <div className={style['navigation-layer']}>
       <div className={style.navigation} ref={ref}>
