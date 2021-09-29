@@ -1,24 +1,27 @@
 export type ArticleBase = {
-  id: number,
+  id: string,
   title: string,
   desc?: string,
-  time: Date
+  mtime: number,
+  ctime: number
 }
 
-type ArticleDir = { 
+export type ArticleDir = { 
   title: string, 
+  leave: number,
   children: Array<ArticleDir> 
 } 
+export type ArticleDirs = Array<ArticleDir> 
 
 export type Article = ArticleBase & {
-  head?: string,
+  head: string | null,
   body: string,
-  dirs: Array<ArticleDir>
-  foot?: string,
+  dirs: ArticleDirs
+  foot: string | null,
 }
 
 export type Column = {
-  id: number,
+  id: string,
   title: string,
   desc?: string,
   articles: Array<ArticleBase>

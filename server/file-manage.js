@@ -2,16 +2,22 @@ const fs = require('fs-extra')
 const path = require('path')
 const { JSDOM } = require('jsdom')
 const paths = require('./config')
+const chokidar = require('chokidar')
 const { gendNewId, analysisMarked } = require('./util')
 
 const analysisArticleMD = (mdstr, id) => {
-  console.log(id)
   return analysisMarked(mdstr, `/${paths.outputArticleDir}/${id}/`)
 }
 
 // 读取文件
 const readFile = (() => {
-  const cache = {}
+  let cache = {}
+  
+  if (!paths.fileCache) {
+    chokidar.watch(paths.enter, 
+      () => cache = {}
+    )
+  }
 
   return (dir, filename) => {
     const filepath = filename ? path.resolve(dir, filename) : dir
@@ -30,6 +36,7 @@ const readFile = (() => {
 // 写入config
 const writeConfig = (path, config) => {
   return fs.writeFile(path, JSON.stringify(config, 0, 2))
+    .then(() => config)
 }
 
 // 读取config
@@ -75,43 +82,43 @@ const genArticleConfig = (articlePath) => {
   const promise = base.then(readConfig)
     .then(base => perfectArticleData(articlePath, base))
 
-  promise.then(base => writeConfig(filename, base))
+  return promise
+    .then(base => writeConfig(filename, base))
+    .then(base => {
+      if (base.template) return base;
+      
+      const config = { ...base }
+      const tempPromises = []
 
-  return promise.then(base => {
-    if (base.template) return base;
-    
-    const config = { ...base }
-    const tempPromises = []
+      for (let key of paths.templates) {
+        const tempPath = config[key] && path.resolve(articlePath, config[key])
+        const tempPromise = tempPath && readFile(tempPath)
 
-    for (let key of paths.templates) {
-      const tempPath = config[key] && path.resolve(articlePath, config[key])
-      const tempPromise = tempPath && readFile(tempPath)
-
-      if (tempPromise) {
-        const tempDir = path.resolve(tempPath, '../')
-        
-        tempPromises.push(
-          Promise.all([
-            genArticle(tempDir),
-            tempPromise
-          ]).then(([tempConfig, tempStr]) => {
-            const { html, navs } = analysisArticleMD(tempStr, tempConfig.id)
-            config[key] = {
-              ...tempConfig,
-              ...analysisArticleMD(tempStr, tempConfig.id),
-              dirs: navs,
-              body: html,
-              dir: tempDir
-            }
-          })
-        )
-      } else {
-        config[key] = null
+        if (tempPromise) {
+          const tempDir = path.resolve(tempPath, '../')
+          
+          tempPromises.push(
+            Promise.all([
+              genArticle(tempDir),
+              tempPromise
+            ]).then(([tempConfig, tempStr]) => {
+              const { html, navs } = analysisArticleMD(tempStr, tempConfig.id)
+              config[key] = {
+                ...tempConfig,
+                ...analysisArticleMD(tempStr, tempConfig.id),
+                dirs: navs,
+                body: html,
+                dir: tempDir
+              }
+            })
+          )
+        } else {
+          config[key] = null
+        }
       }
-    }
 
-    return Promise.all(tempPromises).then(() => config)
-  })
+      return Promise.all(tempPromises).then(() => config)
+    })
 }
 
 // 生成文章数据
@@ -152,9 +159,7 @@ const genColumnConfig = (dir) => {
   const promise = base.then(readConfig)
     .then(base => perfectBaseData(dir, base))
 
-  promise.then(base => writeConfig(filename, base))
-
-  return promise
+  return promise.then(base => writeConfig(filename, base))
 }
 
 // 读取栏目

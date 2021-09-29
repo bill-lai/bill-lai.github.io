@@ -7,10 +7,10 @@ import { queryRoutePath } from 'src/router'
 
 
 function ColumnItem(props: Column) {
-  const articles = props.articles.map(({title, id, time}, i) =>(
+  const articles = props.articles.map(({title, id, mtime}, i) =>(
     <li key={i}>
       <Link className="wlink" to={queryRoutePath('article', { id })}>{title}</Link>
-      <span className="marker">{time.toUTCString()}</span>
+      <span className="marker">{new Date(mtime).toUTCString()}</span>
     </li>
   ))
 

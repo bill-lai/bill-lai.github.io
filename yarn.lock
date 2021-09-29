@@ -7445,6 +7445,11 @@ mime-types@^2.1.12, mime-types@^2.1.27, mime-types@~2.1.17, mime-types@~2.1.19, 
   dependencies:
     mime-db "1.46.0"
 
+mime.json@^1.2.2:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/mime.json/-/mime.json-1.2.2.tgz#6eeed5ca8e42446c9346f153e41d4406a1abbb12"
+  integrity sha512-KsJgGXt4cP1y5r09cqtZZpzk5ntJRq4SAMa0VK2nn5IKJr1QPrI+479YDd8aV24vL7rvIZ5fnH/xWvI6NT3McA==
+
 mime@1.6.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/mime/-/mime-1.6.0.tgz#32cd9e5c64553bd58d19a568af452acff04981b1"

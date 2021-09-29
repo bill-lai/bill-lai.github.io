@@ -97,6 +97,8 @@ checkBrowsers(paths.appPath, isInteractive)
         devServer.sockWrite(devServer.sockets, 'warnings', warnings),
       errors: errors =>
         devServer.sockWrite(devServer.sockets, 'errors', errors),
+
+      
     };
     // Create a webpack compiler that is configured with custom messages.
     const compiler = createCompiler({
@@ -122,7 +124,7 @@ checkBrowsers(paths.appPath, isInteractive)
       urls.lanUrlForConfig
     );
     const devServer = new WebpackDevServer(compiler, serverConfig);
-    // Launch WebpackDevServer.
+    
     devServer.listen(port, HOST, err => {
       if (err) {
         return console.log(err);

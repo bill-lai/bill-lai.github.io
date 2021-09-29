@@ -12,7 +12,7 @@ function Special() {
         const yearColumns: ColumnList = []
         for (const column of columns) {
           for (const article of column.articles) {
-            const ident = article.time.getFullYear()
+            const ident = new Date(article.mtime).getFullYear().toString()
             const yearColumn = yearColumns.find(({id}) => id === ident)
 
             if (yearColumn) {

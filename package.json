@@ -168,6 +168,7 @@
     "@types/react-redux": "^7.1.18",
     "@types/react-router-dom": "^5.1.8",
     "chokidar": "^3.5.2",
-    "jsdom": "^17.0.0"
+    "jsdom": "^17.0.0",
+    "mime.json": "^1.2.2"
   }
 }

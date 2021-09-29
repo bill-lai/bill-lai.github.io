@@ -1,8 +1,8 @@
 // -------------文章----------------
-export const getArticle = `/${process.env.outputArticleDir}/:id/${process.env.outputDataFileName}.${process.env.suffix}` as 'getArticle'
+export const getArticle = process.env.getArticleApi as 'getArticle'
 
 // -------------类别-----------------
-export const getColumnList = `/${process.env.outputColumnDir}/${process.env.outputDataFileName}.${process.env.suffix}` as 'getColumnList'
+export const getColumnList = process.env.getColumnListApi as 'getColumnList'
 
 // -------------评论-------------------
 export const getComment = `c`

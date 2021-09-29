@@ -11,7 +11,7 @@ import {
 type Interface = {
   [getArticle]: {
     method: 'GET',
-    params: { id: number },
+    params: { id: string },
     response: Article
   },
   [getColumnList]: {

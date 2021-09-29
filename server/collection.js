@@ -7,7 +7,7 @@ const { copyDirFiles } = require('./util')
 
 // 获取源数据
 const getData = (() => {
-  let dataPromise = fileManage.genData()
+  let dataPromise
 
   if (!config.fileCache) {
     chokidar.watch(config.enter, 
@@ -15,7 +15,12 @@ const getData = (() => {
     )
   }
 
-  return () => dataPromise
+  return () => {
+    if (!dataPromise) {
+      dataPromise = fileManage.genData()
+    }
+    return dataPromise
+  }
 })();
 
 // 生成去除无关的文章数据
@@ -46,9 +51,15 @@ const genColumnData = column => ({
       const article = genArticleData(base)
       delete article.dirs
       delete article.body
+      
+      config.templates.forEach(key => {
+        delete article[key]
+      })
       return article
     })
 })
+
+const genColumnListData = columnList => columnList.map(genColumnData)
 
 
 // 获取文章数据
@@ -108,7 +119,7 @@ const collColumnList = () =>
             config.outputColumnDir, 
             `${config.outputDataFileName}.${config.suffix}`
           ),
-          JSON.stringify(columns.map(genColumnData))
+          JSON.stringify(genColumnListData(columns))
         )
       ]).then(() => columns)
     )
@@ -127,9 +138,13 @@ const collData = () =>
       return Promise.all(collPromises)
     })
 
-    collData()
+
+collData()
 
 module.exports = {
+  genArticleData,
+  genColumnData,
+  genColumnListData,
   getArticle,
   getColumn,
   getColumnList,
