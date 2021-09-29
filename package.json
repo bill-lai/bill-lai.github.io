@@ -80,8 +80,7 @@
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js",
-    "deploy": "node scripts/deploy.js",
-    "coll": "node server/collection.js"
+    "deploy": "node scripts/deploy.js"
   },
   "eslintConfig": {
     "extends": [
