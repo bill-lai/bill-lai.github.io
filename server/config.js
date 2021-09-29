@@ -14,7 +14,7 @@ module.exports = {
   templates: ['head', 'foot'],
 
   describe,
-  fileCache: true,
+  fileCache: false,
   
   output,
   copyExclude: new RegExp(`.*(.md|${describe})$`)

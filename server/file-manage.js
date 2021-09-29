@@ -4,6 +4,7 @@ const { JSDOM } = require('jsdom')
 const paths = require('./config')
 const chokidar = require('chokidar')
 const { gendNewId, analysisMarked } = require('./util')
+const state = require('./state')
 
 const analysisArticleMD = (mdstr, id) => {
   return analysisMarked(mdstr, `/${paths.outputArticleDir}/${id}/`)
@@ -14,9 +15,11 @@ const readFile = (() => {
   let cache = {}
   
   if (!paths.fileCache) {
-    chokidar.watch(paths.enter, 
-      () => cache = {}
-    )
+    chokidar.watch(paths.enter).on('all', () => {
+      if (!state.autoWrite) {
+        cache = {}
+      }
+    })
   }
 
   return (dir, filename) => {
@@ -34,10 +37,35 @@ const readFile = (() => {
 })();
 
 // 写入config
-const writeConfig = (path, config) => {
-  return fs.writeFile(path, JSON.stringify(config, 0, 2))
-    .then(() => config)
-}
+const writeConfig = (() => {
+  const writeStack = []
+
+  const complete = (writePromise) => {
+    let index = writeStack.indexOf(writePromise)
+    if (index > -1) {
+      writeStack.splice(index, 1)
+    }
+    setTimeout(() => {
+      if (!writeStack.length) {
+        state.autoWrite = false
+      }
+    }, 1000)
+  }
+
+  return (path, config) => {
+
+    const promise = fs
+      .writeFile(path, JSON.stringify(config, 0, 2))
+      .then(() => config)
+
+    state.autoWrite = true
+    writeStack.push(promise)
+    promise.then(() => complete(promise))
+      .catch(() => complete(promise))
+
+    return promise
+  }
+})();
 
 // 读取config
 const readConfig = (str) => {

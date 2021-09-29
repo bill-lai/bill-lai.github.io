@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { axios, config, Article, ArticleDirs } from 'src/request'
+import { axios, config, Article, ArticleDirs, ArticleTemp } from 'src/request'
 import { useParams } from 'react-router-dom'
 import ContentLayer from 'src/components/content-layer'
 import { debounce } from 'src/util'
@@ -43,10 +43,21 @@ const GetArticleState = () => {
     axios.get(config.getArticle, { params: { id } })
       .then(article => {
         setArticle(article)
-        setMarkedData({
-          html: article.body,
-          dirs: navsToDirs(article.dirs)
-        })
+        let html = ''
+        let dirs: ArticleDirs = []
+
+        const joinTemp = (temp: ArticleTemp) => {
+          if (temp) {
+            html += temp.body
+            dirs.push(...temp.dirs)
+          }
+        }
+
+        joinTemp(article.head)
+        joinTemp(article)
+        joinTemp(article.foot)
+
+        setMarkedData({ html, dirs: navsToDirs(dirs) })
       })
   }, [ id ])
 

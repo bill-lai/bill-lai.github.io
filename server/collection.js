@@ -4,15 +4,18 @@ const chokidar = require('chokidar')
 const fileManage = require('./file-manage')
 const config = require('./config')
 const { copyDirFiles } = require('./util')
+const state = require('./state')
 
 // 获取源数据
 const getData = (() => {
   let dataPromise
 
   if (!config.fileCache) {
-    chokidar.watch(config.enter, 
-      () => dataPromise = fileManage.genData()
-    )
+    chokidar.watch(config.enter).on('all', () => {
+      if (!state.autoWrite) {
+        dataPromise = void 0
+      }
+    })
   }
 
   return () => {

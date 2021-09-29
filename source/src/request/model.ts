@@ -13,11 +13,16 @@ export type ArticleDir = {
 } 
 export type ArticleDirs = Array<ArticleDir> 
 
-export type Article = ArticleBase & {
-  head: string | null,
+export type ArticleTemp = null | {
   body: string,
   dirs: ArticleDirs
-  foot: string | null,
+}
+
+export type Article = ArticleBase & {
+  head: ArticleTemp,
+  body: string,
+  dirs: ArticleDirs
+  foot: ArticleTemp,
 }
 
 export type Column = {
