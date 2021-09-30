@@ -203,8 +203,10 @@ const listenElesAppear = (() => {
 
 export const withScreenShow = <P extends object>(
   component: Component<P>, 
-  view: View = window
+  view: View | undefined = typeof window === 'undefined' ? void 0 : window
 ) => {
+  if (!view) return component
+
   return <T extends string|void>({ onShowChange, forwardRef, selector, ...props }: P & WithScreenAttachProps<T>, ref?: any) => {
     const instance = component(props as P, ref)
     if (instance && (onShowChange || forwardRef)) {
