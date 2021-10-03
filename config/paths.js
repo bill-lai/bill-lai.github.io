@@ -56,6 +56,7 @@ const resolveSource = relativePath => path.resolve('source', relativePath)
 module.exports = {
   dotenv: resolveApp('.env'),
   appPath: resolveApp('.'),
+  buildPath,
   appBuild: resolveApp(buildPath),
   appBuildHTML: path.resolve(resolveApp(buildPath), './template.html'),
   appPublic: resolveApp(resolveSource('public')),
