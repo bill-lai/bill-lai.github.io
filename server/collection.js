@@ -142,8 +142,6 @@ const collData = () =>
     })
 
 
-collData()
-
 module.exports = {
   genArticleData,
   genColumnData,

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import devData from './dev.data'
+import { gendUrl, equalUrl } from 'src/util'
 import {
   AxiosRequestConfig as BaseAxiosReqConfig,
   AxiosStatic as BaseAxiosStatic,
@@ -66,27 +67,6 @@ export type AxiosStatic<Config, URLS = keyof Config> =
     create<T extends URLS>(config?: AxiosReqConfig<Config, T>): AxiosInstance<Config, URLS>;
   }
 
-
-const place = /(?::([^/]*))/g
-
-const equalUrl = (tempUrl: string, url: string) => {
-  const urlRgStr = tempUrl.replace(/\//g,'\\/')
-    .replace(place, () => `(?:[^/]*)`)
-  
-  return new RegExp(urlRgStr).test(url)
-}
-
-const gendUrl = (tempUrl: string, params: { [key: string]: any}) => {
-  let url = ''
-  let preIndex = 0
-  let m
-  while ((m = place.exec(tempUrl))) {
-    url += tempUrl.substring(preIndex, m.index) + (params[m[1]] || 'null')
-    preIndex = m.index + m[0].length
-  }
-  url += tempUrl.substr(preIndex)
-  return url
-}
 
 
 let isSetup = false

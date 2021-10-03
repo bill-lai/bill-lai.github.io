@@ -110,14 +110,12 @@ const NavsContent = witchParentClass(
       }
     })
 
-    if (!parent) return null;
-
 
     const ItemContent = parent ? getNavContent(parent) : NavContent
     const children = list.map((item, i) => {
       const itemRef: WithScreenRef = React.createRef()
       refs.push(itemRef)
-      return <ItemContent {...props} active={active} parent={parent} key={i} item={item} forwardRef={itemRef} />
+      return <ItemContent {...props} active={active} parent={parent as any} key={i} item={item} forwardRef={itemRef} />
     })
 
     if (attachHeight) {

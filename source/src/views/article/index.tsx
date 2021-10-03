@@ -1,11 +1,12 @@
 import * as React from 'react'
-import { axios, config, Article, ArticleDirs, ArticleTemp } from 'src/request'
+import { axios, config, ArticleDirs, ArticleTemp } from 'src/request'
 import { useParams } from 'react-router-dom'
 import ContentLayer from 'src/components/content-layer'
 import { debounce } from 'src/util'
 import './marked.scss'
 import { Navigation, Navs } from 'src/components/navigation'
 import { withScreenShow } from 'src/hoc'
+import { useGlobalState } from 'src/state'
 
 type NavItem = {
   title: string,
@@ -34,39 +35,6 @@ const findDir = (dirs: Array<NavItem>, title: string): NavItem | null => {
   return null
 }
 
-const GetArticleState = () => {
-  const [markedData, setMarkedData] = React.useState<{ html: string, dirs: Navs<NavItem> } | null>(null)
-  const [article, setArticle] = React.useState<Article | null>(null)
-  const { id } = useParams() as { id: 'string' }
-
-  React.useEffect(() => {
-    axios.get(config.getArticle, { params: { id } })
-      .then(article => {
-        setArticle(article)
-        let html = ''
-        let dirs: ArticleDirs = []
-
-        const joinTemp = (temp: ArticleTemp) => {
-          if (temp) {
-            html += temp.body
-            dirs.push(...temp.dirs)
-          }
-        }
-
-        joinTemp(article.head)
-        joinTemp(article)
-        joinTemp(article.foot)
-
-        setMarkedData({ html, dirs: navsToDirs(dirs) })
-      })
-  }, [ id ])
-
-  return {
-    markedData,
-    article
-  }
-}
-
 const MarkerBody = withScreenShow(({html}: { html: string }) => 
   <div 
     className="article-body" 
@@ -75,21 +43,46 @@ const MarkerBody = withScreenShow(({html}: { html: string }) =>
 )
 
 const ArticleInfo = () => {
-  const { article, markedData } = GetArticleState()
+  const { id } = useParams() as { id: 'string' }
+  const [ article ] = useGlobalState(
+    `article/${id}`,
+    () => axios.get(config.getArticle, { params: { id } }),
+    article => {
+      let html = ''
+      let dirs: Navs<NavItem> = []
+  
+      const joinTemp = (temp: ArticleTemp) => {
+        if (temp) {
+          html += temp.body
+          dirs.push(...navsToDirs(temp.dirs))
+        }
+      }
+  
+      joinTemp(article.head)
+      joinTemp(article)
+      joinTemp(article.foot)
+  
+      return {
+        ...article,
+        html, 
+        dirs
+      }
+    }
+  )
   const [ active, setActive ] = React.useState<NavItem | null>(null)
+  
   let isDestroy = false
-
   React.useEffect(() => () => {
     isDestroy = true
   })
 
-  if (!article || !markedData) return null;
+  if (!article) return null;
   
   const showTitleEls: Array<HTMLElement> = []
   const scrollChangeActive = debounce(() => {
     if (showTitleEls.length) {
       const title = showTitleEls[0].textContent
-      const item = title && findDir(markedData.dirs, title)
+      const item = title && findDir(article.dirs, title)
       !isDestroy && item && setActive(item)
       showTitleEls.length = 0
     }
@@ -115,7 +108,7 @@ const ArticleInfo = () => {
             <span className="marker">{new Date(article.mtime).toString()}</span>
           </h1>
           <MarkerBody 
-            html={markedData.html}
+            html={article.html}
             selector="h2,h3"
             onShowChange={titleShowScreenChange}
           />
@@ -126,7 +119,7 @@ const ArticleInfo = () => {
           className="navigation"
           title="文章列表"
           active={active}
-          list={markedData.dirs}
+          list={article.dirs}
           onClick={
             (dir) => {
               dir && (window.location.hash = dir.id.toString())

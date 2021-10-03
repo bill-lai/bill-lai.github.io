@@ -24,7 +24,7 @@ export const router: Routes = normalize([
   {
     main: true,
     name: 'home',
-    path: '/home',
+    path: '/',
     Component: Home,
   },
   {

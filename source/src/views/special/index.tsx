@@ -1,35 +1,35 @@
 import Theme from 'src/components/theme'
 import * as React from 'react'
 import { axios, config, ColumnList} from 'src/request'
+import { useGlobalState } from 'src/state'
 
 
 function Special() {
-  const [columns, setColumns] = React.useState<ColumnList>([])
+  const [columns] = useGlobalState(
+    'columns', 
+    () => axios.get(config.getColumnList),
+    columns => {
+      const yearColumns: ColumnList = []
+      for (const column of columns) {
+        for (const article of column.articles) {
+          const ident = new Date(article.mtime).getFullYear().toString()
+          const yearColumn = yearColumns.find(({id}) => id === ident)
 
-  React.useEffect(() => {
-    axios.get(config.getColumnList)
-      .then(columns => {
-        const yearColumns: ColumnList = []
-        for (const column of columns) {
-          for (const article of column.articles) {
-            const ident = new Date(article.mtime).getFullYear().toString()
-            const yearColumn = yearColumns.find(({id}) => id === ident)
-
-            if (yearColumn) {
-              yearColumn.articles.push(article)
-            } else {
-              yearColumns.push({
-                id: ident,
-                title: `${ident}年`,
-                articles: [article]
-              })
-            }
+          if (yearColumn) {
+            yearColumn.articles.push(article)
+          } else {
+            yearColumns.push({
+              id: ident,
+              title: `${ident}年`,
+              articles: [article]
+            })
           }
         }
-        return yearColumns
-      })
-      .then(setColumns)
-  }, [])
+      }
+      return yearColumns
+    },
+    [],
+  )
 
   return (
     <Theme 

@@ -1,14 +1,14 @@
 import Theme from 'src/components/theme'
 import * as React from 'react'
-import { axios, config, ColumnList} from 'src/request'
+import { axios, config } from 'src/request'
+import { useGlobalState } from 'src/state'
 
 function Special() {
-  const [columns, setColumns] = React.useState<ColumnList>([])
-
-  React.useEffect(() => {
-    axios.get(config.getColumnList)
-      .then(setColumns)
-  }, [])
+  const [columns] = useGlobalState(
+    'columns', 
+    () => axios.get(config.getColumnList),
+    []
+  )
 
   return (
     <Theme 

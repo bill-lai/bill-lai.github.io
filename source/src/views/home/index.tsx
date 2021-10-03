@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { axios, config, ArticleBase} from 'src/request'
+import { axios, config, ArticleBase } from 'src/request'
 import Layer from 'src/components/content-layer'
 import style from './style.module.scss'
 import { Link } from 'react-router-dom'
@@ -7,6 +7,7 @@ import { queryRoutePath } from 'src/router'
 import Navigation from 'src/components/navigation'
 import { ScrollGroupMange } from 'src/components/theme'
 import { withScreenShow } from 'src/hoc'
+import { useGlobalState } from 'src/state'
 
 
 const ArticleItem = withScreenShow((props: ArticleBase) => {
@@ -23,25 +24,22 @@ const ArticleItem = withScreenShow((props: ArticleBase) => {
 })
 
 const Home = () => {
-  const [articles, setArticles] = React.useState<Array<ArticleBase>>([])
   const {
     active,
     setActive,
     columnShowChange
   } = ScrollGroupMange<ArticleBase>()
 
-  React.useEffect(() => {
-    axios.get(config.getColumnList)
-      .then(columns => {
-        setArticles(
-          columns.reduce(
-            (t:Array<ArticleBase>, column) => t.concat(column.articles), 
-            []
-          )
-        )
-      })
-  }, [])
-
+  const [articles] = useGlobalState(
+    'columns', 
+    () => axios.get(config.getColumnList),
+    columns => 
+      columns.reduce(
+        (t:Array<ArticleBase>, column) => t.concat(column.articles), 
+        []
+      ),
+    [],
+  )
 
   const main = articles.map(item => (
     <ArticleItem 

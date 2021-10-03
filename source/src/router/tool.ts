@@ -5,7 +5,7 @@ export const normalize = (router: Routes, base: string = ''): Routes => {
   const nRouter = []
 
   for (let route of router) {
-    const path = resolve(base, route.path)
+    const path = base ? resolve(base, route.path) : route.path
     const children = route.children && normalize(route.children, path)
     nRouter.push({
       ...route,
