@@ -7,6 +7,7 @@ import './marked.scss'
 import { Navigation, Navs } from 'src/components/navigation'
 import { withScreenShow } from 'src/hoc'
 import { useGlobalState } from 'src/state'
+import app from 'src/platform'
 
 type NavItem = {
   title: string,
@@ -98,6 +99,7 @@ const ArticleInfo = () => {
     scrollChangeActive()
   }
 
+  app.setAppTitle(article.title)
 
   return (
     <ContentLayer 

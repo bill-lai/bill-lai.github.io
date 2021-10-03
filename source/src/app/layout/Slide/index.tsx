@@ -1,8 +1,7 @@
 import * as React from 'react'
 import { homePath, queryRoutePath } from 'src/router'
 import { Link } from 'react-router-dom'
-// import portrait from 'src/assets/images/portrait.jpg'
-import portrait from 'src/assets/images/test.jpg'
+import portrait from 'src/assets/images/portrait.jpg'
 import styles from './style.module.scss'
 
 interface navType {
@@ -36,7 +35,7 @@ const Slide: React.FC<SlideProps> = (props) => {
       <div className={styles.content}>
         <div className={styles.introduce}>
           <h1>
-            <Link to={homePath}>Jerry Qu</Link>
+            <Link to={homePath}>bill-lai</Link>
           </h1>
           <p>专注 WEB 端开发</p>
         </div>

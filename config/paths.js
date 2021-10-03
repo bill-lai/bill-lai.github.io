@@ -52,13 +52,15 @@ const resolveModule = (resolveFn, filePath) => {
 
 const resolveSource = relativePath => path.resolve('source', relativePath)
 
+const buildHTML = 'template.html'
 // config after eject: we're in ./config/
 module.exports = {
   dotenv: resolveApp('.env'),
   appPath: resolveApp('.'),
   buildPath,
   appBuild: resolveApp(buildPath),
-  appBuildHTML: path.resolve(resolveApp(buildPath), './template.html'),
+  buildHTML,
+  appBuildHTML: path.resolve(resolveApp(buildPath), buildHTML),
   appPublic: resolveApp(resolveSource('public')),
   appHtml: resolveApp(resolveSource('public/index.html')),
   appIndexJs: resolveModule(resolveApp, resolveSource('src/client')),

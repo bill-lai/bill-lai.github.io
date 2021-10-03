@@ -8,6 +8,7 @@ import Navigation from 'src/components/navigation'
 import { ScrollGroupMange } from 'src/components/theme'
 import { withScreenShow } from 'src/hoc'
 import { useGlobalState } from 'src/state'
+import app from 'src/platform'
 
 
 const ArticleItem = withScreenShow((props: ArticleBase) => {
@@ -48,6 +49,8 @@ const Home = () => {
       onShowChange={(isShow) => columnShowChange(item, isShow)}  
     />
   ));
+
+  app.setAppTitle('')
   
   return <Layer
     main={

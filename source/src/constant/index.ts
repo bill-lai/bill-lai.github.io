@@ -1,0 +1,1 @@
+export const appName = `bill-lai 的博客`

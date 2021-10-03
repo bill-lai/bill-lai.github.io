@@ -4,7 +4,7 @@ let state: { [key: string]: any } = { }
 
 export const statePromises: { [key: string]: Promise<any> } = { }
 
-export const injeState = (data: { [key: string]: any }) => {
+export const injectState = (data: { [key: string]: any }) => {
   state = {
     ...state,
     ...data

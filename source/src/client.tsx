@@ -1,13 +1,18 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import App from './app';
-import 'src/assets/style/public.scss'
 import { BrowserRouter as Router } from 'react-router-dom'
-import { injeState } from './state'
+import { injectState } from './state'
+import { injectPlatform } from './platform'
 
 if ((window as any).globalState) {
-  injeState((window as any).globalState)
+  injectState((window as any).globalState)
 }
+
+injectPlatform({
+  setAppTitle: title => document.title = title,
+  getAppTitle: () => document.title
+})
 
 ReactDOM.render(
   <Router>

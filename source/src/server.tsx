@@ -2,23 +2,30 @@ import * as React from 'react';
 import App from './app';
 import { renderToString } from 'react-dom/server'
 import { StaticRouter as Router } from 'react-router-dom'
-import { statePromises, injeState } from './state'
+import { statePromises, injectState } from './state'
+import { injectPlatform } from './platform'
 
-const getRenderString = (url: string, inje: any) => {
+let appTitle = ''
+injectPlatform({
+  setAppTitle: title => appTitle = title,
+  getAppTitle: () => appTitle
+})
+
+const getRenderInfo = async (url: string, inje: any) => {
   const Element = (
     <Router location={url}>
       <App />
     </Router>
   )
 
-  inje && injeState(inje)
+  inje && injectState(inje)
 
-  const promises = Object.values(statePromises)
-  if (promises.length) {
-    return Promise.all(promises)
-      .then(() => renderToString(Element))
-  } else {
-    return Promise.resolve(renderToString(Element))
+  await Promise.all(Object.values(statePromises))
+
+  return {
+    html: renderToString(Element),
+    title: appTitle
   }
+  
 }
-export default getRenderString
+export default getRenderInfo

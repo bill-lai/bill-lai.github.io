@@ -1,5 +1,5 @@
 import collection from './collection'
-import getRenderString from '../source/src/server'
+import getRenderInfo from '../source/src/server'
 import { router } from '../source/src/router'
 import { gendUrl } from '../source/src/util'
 import config from './config'
@@ -33,8 +33,8 @@ const genPages = async () => {
   const articleRoute = router.find(({name}) => name === 'article')
   const otherRouter = router.filter(({name}) => name !== 'article')
   const genPageData = (path, data) => 
-    getRenderString(path, data)
-      .then(html => ({ path, html, data}))
+    getRenderInfo(path, data)
+      .then(({html, title}) => ({ path, html, data, title}))
 
   const pages = await Promise.all([
     ...otherRouter.map(route => genPageData(route.path, { columns })),
@@ -47,7 +47,7 @@ const genPages = async () => {
   ])
 
   return Promise.all(
-    pages.map(({path: localPath, html, data}) => {
+    pages.map(({path: localPath, html, data, title}) => {
       console.log(`正在生成${localPath}`)
       return fs.outputFile(
         path.resolve(config.output, localPath.substr(1), './index.html'),
@@ -55,6 +55,9 @@ const genPages = async () => {
           /<div\s+id=["|']root["|']\s*>\s*<\/div>/,
           `<div id="root">${html}</div>
            <script>var globalState = ${JSON.stringify(data)}</script>`
+        ).replace(
+          /<title.*>.*<\/title>/,
+          `<title>${title}</title>`
         )
       )
     })

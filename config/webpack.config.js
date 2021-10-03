@@ -564,9 +564,10 @@ module.exports = function (webpackEnv) {
       new HtmlWebpackPlugin(
         Object.assign(
           {},
+          isEnvProduction 
+            ? { filename: paths.buildHTML }
+            : {},
           {
-            
-            filename: paths.appBuildHTML,
             inject: true,
             template: paths.appHtml,
           },
