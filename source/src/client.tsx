@@ -14,7 +14,7 @@ injectPlatform({
   getAppTitle: () => document.title
 })
 
-ReactDOM.render(
+ReactDOM.hydrate(
   <Router>
     <App />
   </Router>,

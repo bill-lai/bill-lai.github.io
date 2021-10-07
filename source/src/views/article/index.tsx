@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { axios, config, ArticleDirs, ArticleTemp } from 'src/request'
+import { axios, config, ArticleDirs, ArticleTemp, githubApi } from 'src/request'
 import { useParams } from 'react-router-dom'
 import ContentLayer from 'src/components/content-layer'
 import { debounce } from 'src/util'
@@ -8,6 +8,8 @@ import { Navigation, Navs } from 'src/components/navigation'
 import { withScreenShow } from 'src/hoc'
 import { useGlobalState } from 'src/state'
 import app from 'src/platform'
+
+// githubApi.getUserInfo()
 
 type NavItem = {
   title: string,

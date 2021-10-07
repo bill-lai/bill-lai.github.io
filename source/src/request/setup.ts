@@ -90,8 +90,8 @@ const setupAxios = <
   }
 
   const errorHandler = (res: BaseAxiosResponse, msg: string = '出了点小问题') => {
+    console.log(res.status)
     if (process.env.NODE_ENV === 'development') {
-
       if (res.config && res.config.url) {
         let key = Object.keys(devData).find(tempUrl => equalUrl(tempUrl, res.config.url as string))
         if (key) {
@@ -126,6 +126,7 @@ const setupAxios = <
       return res.data
     }
   }, errorHandler)
+
   return axios as unknown as RetAxios
 }
 

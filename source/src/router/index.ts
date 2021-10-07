@@ -3,6 +3,7 @@ import Home from '../views/home'
 import Special from '../views/special'
 import Archive from '../views/archive'
 import Article from '../views/article'
+import Auth from '../views/auth'
 import { generatePath as toolGeneratePath } from 'react-router-dom'
 import { ExtractRouteParams } from 'react-router'
 import {
@@ -42,7 +43,11 @@ export const router: Routes = normalize([
     path: '/article/:id',
     Component: Article
   },
-  
+  {
+    name: 'auth',
+    path: '/auth',
+    Component: Auth
+  }
 ])
 
 export const home = router.find(({main}) => main)

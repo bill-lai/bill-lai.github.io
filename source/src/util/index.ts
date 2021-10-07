@@ -29,7 +29,6 @@ export const debounce = (fn: Function, delay: number = 160) => {
 
 
 
-
 const place = /(?::([^/]*))/g
 // 匹配 /:id 是否匹配某个url
 export const equalUrl = (tempUrl: string, url: string) => {
@@ -41,6 +40,8 @@ export const equalUrl = (tempUrl: string, url: string) => {
 
 // 生成/:id 类真实url
 export const gendUrl = (tempUrl: string, params: { [key: string]: any}) => {
+  if (tempUrl.includes('//')) return tempUrl;
+
   let url = ''
   let preIndex = 0
   let m
@@ -51,3 +52,26 @@ export const gendUrl = (tempUrl: string, params: { [key: string]: any}) => {
   url += tempUrl.substr(preIndex)
   return url
 }
+
+
+export const strToParams = (str: string) => {
+  if (str[0] === '?') {
+    str = str.substr(1)
+  }
+
+  const result: { [key: string]: string } = {}
+  const splitRG = /([^=&]+)(?:=([^&]*))?&?/
+
+  let rgRet
+  while ((rgRet = str.match(splitRG))) {
+    result[rgRet[1]] = rgRet[2]
+    str = str.substr(rgRet[0].length)
+  }
+  
+  return result
+}
+
+export const paramsToStr = (params: { [key: string]: string }) => 
+  '?' + Object.keys(params)
+    .map(key => `${key}${params[key] == null ? '' : `=${params[key]}`}`)
+    .join('&')

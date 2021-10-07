@@ -1,6 +1,8 @@
 import {
   getArticle,
-  getColumnList
+  getColumnList,
+  getUserInfo,
+  getToken
 } from './config'
 
 import {
@@ -17,6 +19,18 @@ type Interface = {
   [getColumnList]: {
     method: 'GET',
     response: ColumnList
+  },
+  [getUserInfo]: {
+    method: 'GET',
+  },
+  [getToken]: {
+    method: 'POST',
+    data: {
+      client_id: string,
+      client_secret: string,
+      code: string
+    },
+    response: string
   }
 }
 

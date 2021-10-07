@@ -10,7 +10,6 @@ import { withScreenShow } from 'src/hoc'
 import { useGlobalState } from 'src/state'
 import app from 'src/platform'
 
-
 const ArticleItem = withScreenShow((props: ArticleBase) => {
   return (
     <div className={style.layer}>
