@@ -80,11 +80,10 @@
   },
   "scripts": {
     "start": "node scripts/start.js",
-    "build-client": "node scripts/build.js",
+    "build-client": "node scripts/build.js && yarn build-serve clear",
     "build-serve": "node scripts/ssr.js",
     "build": "yarn build-client && yarn build-serve",
     "release": "node scripts/release.js",
-    "ssr": "node scripts/ssr.js",
     "test": "node scripts/test.js",
     "deploy": "node scripts/deploy.js"
   },

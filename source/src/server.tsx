@@ -11,7 +11,7 @@ injectPlatform({
   getAppTitle: () => appTitle
 })
 
-const getRenderInfo = async (url: string, inje: any) => {
+export const getRenderInfo = async (url: string, inje: any) => {
   const Element = (
     <Router location={url}>
       <App />
@@ -26,6 +26,10 @@ const getRenderInfo = async (url: string, inje: any) => {
     html: renderToString(Element),
     title: appTitle
   }
-  
 }
+
+
+export { router } from 'src/router'
+export { gendUrl } from 'src/util'
+
 export default getRenderInfo
