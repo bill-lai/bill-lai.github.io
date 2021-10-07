@@ -9,7 +9,7 @@ const path = require('path')
 const copyDirFiles = (originDir, targetDir, exclude) => {
   if (!fs.existsSync(originDir)) return Promise.resolve()
 
-  Promise.all([
+  return Promise.all([
     fs.readdirSync(originDir)
       .filter(filename => !exclude || !exclude.test(filename))
       .map(filename => {
