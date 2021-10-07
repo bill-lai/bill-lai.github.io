@@ -175,11 +175,9 @@ export const Navigation = witchParentClass(<T extends object>({
   })
 
   return (
-    <div className={style['navigation-layer']}>
-      <div className={style.navigation} ref={ref}>
-        <h4 className={style.title}>{title}</h4>
-        {content}
-      </div>
+    <div ref={ref}>
+      <h4 className={style.title}>{title}</h4>
+      {content}
     </div>
   )
 })

@@ -119,7 +119,7 @@ const ArticleInfo = () => {
       right={ 
         <Navigation
           className="navigation"
-          title="文章列表"
+          title="目录列表"
           active={active}
           list={article.dirs}
           onClick={

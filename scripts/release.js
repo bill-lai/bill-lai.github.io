@@ -16,6 +16,7 @@ const main = async () => {
     await run(`git`, ['add', '-A'])
     await run(`git`, ['commit', '-m', commitMsg])
     await run(`git`, ['subtree', 'push', '--prefix', buildPath, 'origin', 'gh-pages'])
+    await run(`git`, ['push'])
   } else {
     console.log('没有需要发布的内容')
   }

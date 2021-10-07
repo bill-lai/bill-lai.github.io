@@ -23,10 +23,12 @@ const App: React.FC<{}> = () => {
     <React.StrictMode>
       <div className={styles.app}>
         <Slide className={styles.slide}></Slide>
-        <Switch>
-          {views}
-          <Redirect to={homePath} />
-        </Switch>
+        <div className={styles.body}>
+          <Switch>
+            {views}
+            <Redirect to={homePath} />
+          </Switch>
+        </div>
       </div>
     </React.StrictMode>
   )

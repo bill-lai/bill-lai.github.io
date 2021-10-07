@@ -1,7 +1,6 @@
 
 
 const genPages = () => {
-  require('ignore-styles')
   process.env.BABEL_ENV = 'development';
   process.env.NODE_ENV = 'development';
 
@@ -9,8 +8,10 @@ const genPages = () => {
   const config = configFactory(process.env.NODE_ENV)
   const enter = "../server/ssr-enter"
 
-  require('babel-preset-react-app')
+  // require('babel-preset-react-app')
+  require('ignore-styles')
   require('@babel/register')({
+    cache: true,
     extensions: ['.js', '.mjs', '.jsx', '.ts', '.tsx'],
     ignore: [/\/(node_modules)\//],
     presets: [require.resolve('babel-preset-react-app')],

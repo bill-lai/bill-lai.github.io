@@ -1,24 +1,131 @@
 .layer {
   display: flex;
-  --top: 30px;
 
   .main {
-    padding: var(--top) 80px 30px 30px;
+    padding-top: var(--content-top);
+    padding-left: var(--content-top);
+    padding-bottom: var(--content-top);
+    padding-right: var(--main-padding-right);
     background-color: #fff;
     flex: 1;
     max-width: 1200px;
     overflow: hidden;
   }  
 
-  .right {
-    --width: 340px;
+  .right-layer {
     flex: none;
-    width: var(--width);
-    position: relative;
     border-left: 1px solid #ececec;
+
+    .right {
+      overflow: hidden;
+
+      .right-content {
+        width: calc(100% + 30px);
+        overflow-y: auto;
+        padding-right: 40px;
+        padding-left: var(--right-padding-right);
+      }
+    }
   }
+  
 
   .bottom {
     color: #000;
   }
 }
+
+
+@media screen and (min-width: 650px){
+  .right-layer {
+    position: relative;
+    width: var(--right-width);
+  }
+
+  .right {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: var(--right-width);
+  }
+
+  .right-content {
+    padding-top: var(--content-top);
+    max-height: 100%;
+  }
+}
+
+@media screen and (max-width: 650px){
+  .layer {
+    flex-direction: column-reverse;
+  }
+
+  .right-layer {
+    --nav-height: 40px;
+    --bg-color: #f4f4f4;
+    width: 100%;
+    position: sticky;
+    top: -1px;
+
+
+    &::before {
+      content: '目录列表';
+      padding: 0 var(--content-top);
+      background-color: var(--bg-color);
+      display: block;
+      font-size: 1.1rem;
+      box-sizing: border-box;
+      height: var(--nav-height);
+      line-height: var(--nav-height);
+    }
+
+    &::after {
+      content: '\e6b0';
+      font-family: "iconfont" !important;
+      font-style: normal;
+      position: absolute;
+      right: var(--content-top);
+      top: calc(var(--nav-height) / 2);
+      transform: translateY(-50%);
+      transition: all .1s ease;
+    }
+
+    
+    .right {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: calc(100vh - var(--nav-height));
+      top: var(--nav-height);
+      background-color: rgba(0,0,0,0);
+
+      .right-content {
+        height: 100%;
+        transition: all .1s ease;
+        width: var(--right-width) !important;
+        background-color: var(--bg-color);
+        position: absolute;
+
+        h4 {
+          display: none;
+        }
+      }
+    }
+
+    &:not(.active) {
+      .right {
+        pointer-events: none;
+
+        .right-content {
+          transform: translateX(-100%);
+        }
+      }
+    }
+
+    &.active {
+      &::after { 
+        transform: translateY(-50%) rotateZ(180deg);
+      }
+    }
+  }
+}
+

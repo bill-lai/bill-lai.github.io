@@ -1,4 +1,18 @@
 
+html {
+  --link-color: #076dd0;
+  --main-font-color: #333;
+  --vice-font-color: #666;
+  --background-color: #f7f7f7;
+  font-size: 14px;
+}
+
+@media screen and (max-width: 800px){
+  html {
+    font-size: 12px;
+  }
+}
+
 .main-title {
   margin-bottom: 1.78rem;
   font-size: 2rem;
@@ -33,19 +47,6 @@
   }
   &::after {
     content: ')';
-  }
-}
-
-.navigation {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  width: var(--width);
-
-  > div {
-    padding-top: var(--top);
-    padding-left: 40px;
-    padding-right: 40px;
   }
 }
 

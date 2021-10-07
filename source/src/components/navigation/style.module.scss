@@ -1,17 +1,9 @@
-.navigation-layer {
-  overflow: hidden;
-  .navigation {
-    max-height: 100%;
-    width: calc(100% + 30px);
-    overflow-y: auto;
-  }
-}
-
 .title {
   color: #1a1a1a;
   font-weight: 700;
   font-size: 1.2rem;
   margin-bottom: 10px;
+  padding-left: 27px;
 }
 
 .top-navs {
@@ -21,7 +13,7 @@
     > span {
       color: #6d6d6d;
       padding-right: 7px;
-      padding-left: 7px;
+      padding-left: 27px;
       font-weight: 700;
       line-height: 1.5;
       display: block;

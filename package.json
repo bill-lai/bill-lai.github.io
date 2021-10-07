@@ -178,6 +178,7 @@
     "chokidar": "^3.5.2",
     "ignore-styles": "^5.0.1",
     "jsdom": "^17.0.0",
-    "mime.json": "^1.2.2"
+    "mime.json": "^1.2.2",
+    "webpack-node-externals": "^3.0.0"
   }
 }

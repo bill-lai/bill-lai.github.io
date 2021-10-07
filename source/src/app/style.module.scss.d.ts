@@ -2,8 +2,7 @@
 // Please do not change this file!
 interface CssExports {
   'app': string;
-  'app1': string;
-  'app2': string;
+  'body': string;
   'slide': string;
 }
 export const cssExports: CssExports;

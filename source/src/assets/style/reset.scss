@@ -32,11 +32,3 @@ body { background: var(--background-color); }
 a:hover{ text-decoration: underline; }
 
 a { text-decoration:none; color: var(--link-color); }  
-
-html {
-  font-size: 14px;
-  --link-color: #076dd0;
-  --main-font-color: #333;
-  --vice-font-color: #666;
-  --background-color: #f7f7f7
-}

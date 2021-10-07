@@ -3,8 +3,6 @@
 interface CssExports {
   'active': string;
   'child-navs': string;
-  'navigation': string;
-  'navigation-layer': string;
   'title': string;
   'top-navs': string;
 }

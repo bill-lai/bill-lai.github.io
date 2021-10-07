@@ -8,13 +8,20 @@ type Layer = {
 }
 
 const ContentLayer = (props: Layer) => {
+  const [showRight, setShowRight] = React.useState(false)
+  const rightClass = showRight ? style.active : ''
+
   return (
     <div className={style.layer}>
       <div className={`${style.main}`}>
         {props.main}
       </div>
-      <div className={style.right}>
-        { props.right }
+      <div className={style['right-layer'] + ' ' + rightClass} onClick={() => setShowRight(!showRight)}>
+        <div className={style.right}>
+          <div className={style['right-content']}>
+            { props.right }
+          </div>
+        </div>
       </div>
       {
         props.bottom && 

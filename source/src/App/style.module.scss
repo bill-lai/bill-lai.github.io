@@ -1,22 +1,83 @@
 .app {
-  padding-left: 270px;
-  
+  --content-top: 2.14rem;
+}
+
+.slide {
+  background-color: #155799;
+  background-image: linear-gradient(120deg, #155799, #159957)
+}
+
+@media screen and (min-width: 1300px){
+  .app {
+    --slide-width: 270px;
+    --right-width: 340px;
+    --right-padding-right: 40px;
+    --main-padding-right: 80px;
+  }
+
+  .slide {
+    padding: 30px;
+  }
+}
+
+@media screen and (max-width: 1300px){
+  .app {
+    --slide-width: 220px;
+    --right-width: 240px;
+    --right-padding-right: 0;
+    --main-padding-right: 30px;
+  }
+
+  .slide {
+    padding: 30px 20px;
+  }
+}
+
+
+@media screen and (min-width: 1000px){
+  .body {
+    padding-left: var(--slide-width);
+  }
+    
   .slide {
     position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
-    width: 270px;
-    background-color: #155799;
-    background-image: linear-gradient(120deg, #155799, #159957)
+    width: var(--slide-width);
   }
-
 }
 
-.app1 {
-  color: #fff;
+@media screen and (max-width: 1000px){
+  .slide {
+    margin-right: var(--right-width);
+  }
 }
 
-.app2 {
-  color: #fff;
+
+
+@media screen and (max-width: 780px){
+  .app {
+    --content-top: 10px;
+    --main-padding-right: 10px;
+  }
+}
+
+@media screen and (max-width: 650px){
+  .app {
+    --content-top: 20px;
+    --main-padding-right: 20px;
+    --right-width: 300px;
+  }
+  .slide {
+    margin-right: 0;
+  } 
+}
+
+
+
+@media screen and (max-width: 400px){
+  .app {
+    --right-width: 240px;
+  }
 }

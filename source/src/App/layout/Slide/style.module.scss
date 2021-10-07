@@ -1,5 +1,4 @@
 .slide {
-  padding: 30px;
   color: #fff;
   line-height: 30px;
 
@@ -15,9 +14,9 @@
   }
 
   .portrait {
-    $size: 160px;
-    width: $size;
-    height: $size;
+    --size: 160px;
+    width: var(--size);
+    height: var(--size);
     border-radius: 50%;
   }
 
@@ -37,3 +36,33 @@
   }
 }
 
+
+@media screen and (max-width: 1000px){
+  .slide {
+    padding: 20px;
+
+    .portrait {
+      --pos-lt: 12px;
+      --size: 56px;
+      position: absolute;
+      left: var(--pos-lt);
+      top: var(--pos-lt);
+    }
+
+    .content {
+      margin: 0;
+      .introduce {
+        text-align: center;
+      }
+
+      .navs {
+        display: flex;
+        justify-content: center;
+        li {
+          margin: 0 10px;
+        }
+      }
+    }
+    
+  }
+}
