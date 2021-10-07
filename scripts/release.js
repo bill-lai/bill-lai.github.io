@@ -16,6 +16,7 @@ const main = async () => {
     await run(`git`, ['add', '-A'])
     await run(`git`, ['commit', '-m', commitMsg])
   }
+  await run(`git`, ['config', 'http.sslVerify', 'false'])
   await run(`git`, ['subtree', 'push', '--prefix', buildPath, 'origin', 'gh-pages'])
   await run(`git`, ['push'])
 };
