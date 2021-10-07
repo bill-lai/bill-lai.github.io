@@ -11,15 +11,15 @@ const main = async () => {
 
   await run(`yarn`, ['build-serve'])
 
-  const { stdout } = await run('git', ['diff'], { stdio: 'pipe' })
-  if (stdout) {
+  // const { stdout } = await run('git', ['diff'], { stdio: 'pipe' })
+  // if (stdout) {
     await run(`git`, ['add', '-A'])
     await run(`git`, ['commit', '-m', commitMsg])
     await run(`git`, ['subtree', 'push', '--prefix', buildPath, 'origin', 'gh-pages'])
     await run(`git`, ['push'])
-  } else {
-    console.log('没有需要发布的内容')
-  }
+  // } else {
+  //   console.log('没有需要发布的内容')
+  // }
 };
 
 main()
