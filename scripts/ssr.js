@@ -109,6 +109,8 @@ async function main() {
     )
   ])
 
+  collection.collData()
+
   await Promise.all(
     pages.map(({path: localPath, html, data, title}) => {
       console.log(`正在生成${localPath}`)
