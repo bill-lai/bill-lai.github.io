@@ -54,6 +54,7 @@ const genColumnData = column => ({
       const article = genArticleData(base)
       delete article.dirs
       delete article.body
+      delete article.issues
       
       config.templates.forEach(key => {
         delete article[key]
@@ -140,7 +141,6 @@ const collData = () =>
       }
       return Promise.all(collPromises)
     })
-
 
 module.exports = {
   genArticleData,

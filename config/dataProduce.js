@@ -23,5 +23,6 @@ module.exports = {
   redirectUri: 'https://bill-lai.github.io/auth',
   owner: `bill-lai`,
   repo: `bill-lai.github.io`,
-  issuesLabel: `bill-lai-blog`
+  issuesLabel: `bill-lai-blog`,
+  token: `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`
 }

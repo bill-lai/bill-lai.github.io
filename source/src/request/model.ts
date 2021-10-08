@@ -23,6 +23,10 @@ export type Article = ArticleBase & {
   body: string,
   dirs: ArticleDirs
   foot: ArticleTemp,
+  issues: {
+    commentsUrl: string,
+    number: number
+  }
 }
 
 export type Column = {

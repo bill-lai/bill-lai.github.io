@@ -1,3 +1,24 @@
+import * as marked from 'marked'
+import * as prismjs from 'prismjs'
+
+// 解析mardown文本
+export const analysisMarked = (() => {
+  marked.setOptions({
+    renderer: new marked.Renderer(),
+    gfm: true,
+    breaks: true,
+    pedantic: false,
+    sanitize: false,
+    smartLists: true,
+    smartypants: false,
+    highlight: function (code,lang) {
+      return prismjs.highlight(code, prismjs.languages[lang], lang)
+    }
+  });
+
+  return (str: string) => marked(str)
+})();
+
 // 节流
 export const throttle = (fn: Function, delay: number = 160) => {
   let previous = 0

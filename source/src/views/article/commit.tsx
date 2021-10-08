@@ -1,14 +1,12 @@
 import * as React from 'react'
-import { CommitList, githubApi, UserInfo, Commit as CommitType } from 'src/request'
+import { CommitList, githubApi, UserInfo, Commit as CommitType, Article } from 'src/request'
 import { witchParentClass } from 'src/hoc'
 import style from './style.module.scss'
 import { useGlobalState } from 'src/state'
+import { analysisMarked } from 'src/util'
 
-type Props = {
-  articleId: string
-}
 
-const CommitInput = witchParentClass(({ articleId }: Props) => {
+const CommitInput = witchParentClass(() => {
   const [isAuth] = React.useState(githubApi.isLocalAuth())
   const [userInfo, setUserInfo] = React.useState<UserInfo | void>(undefined)
 
@@ -19,9 +17,9 @@ const CommitInput = witchParentClass(({ articleId }: Props) => {
     }
   }, [isAuth])
 
-  return isAuth 
+  return userInfo 
     ? (<div>
-        { JSON.stringify(userInfo) }
+        { userInfo.login }
       </div>)
     : (<div className={style.unauth}>
         暂未授权登录，<a href={githubApi.getAuthLink()}>授权以发表评论</a>
@@ -31,39 +29,40 @@ const CommitInput = witchParentClass(({ articleId }: Props) => {
 
 const CommitItem = witchParentClass((props: CommitType) => {
   return (
-    <div>
-      <div>
-        <img src={props.user.avatar_url} />
-      </div>
-      <div>
-        <div>
-          <strong>{props.user.login}</strong>
-          
+    <div className={style['commit-item']}>
+      <div className={style.head}>
+        <div className={style.avatar}>
+          <img src={props.user.avatar_url} />
         </div>
+        <strong>{props.user.login}</strong>
+        <span>评论于{props.created_at}</span>
       </div>
-      {props.body}
+      <div 
+        className={style.body + ' marked-body'} 
+        dangerouslySetInnerHTML={{__html: analysisMarked(props.body)}} 
+      />
     </div>
   )
 })
 
 
 
-const Commit = witchParentClass(({ articleId }: Props) => {
+const Commit = witchParentClass(({ commentsUrl }: Article['issues']) => {
   const [commits] = useGlobalState(
-    `${articleId}/commits`,
-    () => githubApi.getCommits(articleId),
+    commentsUrl,
+    () => githubApi.getCommits(commentsUrl),
     []
   )
 
   const commitBody = commits.length 
     ? (<div className="">
-        {commits.map(item => <CommitItem {...item} key={item.id} />)}
+        {commits.map(item => <CommitItem {...item} key={item.id} className={style['commit-item-layer']} />)}
       </div>)
     : <div className=""> <p>暂无评论</p> </div>
 
   return (
     <div>
-      <CommitInput articleId={articleId} />
+      <CommitInput />
       {commitBody}
     </div>
   )

@@ -10,6 +10,7 @@ const owner = `bill-lai`
 const repo = `bill-lai.github.io`
 const issuesLabel = [`${owner}-blog`]
 
+const scope = `public_repo`
 const OriginKey = `originPathname`
 const GetTokenKey = `getToken`
 const store = sessionStorage
@@ -67,6 +68,7 @@ export const getAuthLink = () => {
     params: {
       client_id: clientId,
       redirect_uri: redirectUri,
+      scope
     }
   })
 }
@@ -147,7 +149,6 @@ export const addCommit = (body: AddCommitBody) => {
 
 // 获取评论列表
 export const getCommits = (id: string) => {
-  console.log(id)
   return axios.get(config.getComment, {
     params: {
       labels: '',

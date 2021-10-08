@@ -102,19 +102,41 @@ const perfectArticleData = (path, base = {}) => {
   config.mtime = mtime.getTime()
   config.ctime = config.ctime || ctime.getTime()
 
-  
+  return config
+}
+
+// 关联github issues
+const articleJoinIssues = (config, body) => {
   if (!config.commentsUrl) {
-    axios({
-      headers: { Authorization: `token ${pro.token}` },
+    return axios({
+      headers: { 
+        Authorization: `token ${pro.token}`,
+        Accept: `application/vnd.github.squirrel-girl-preview, application/vnd.github.html+json`
+      },
       method: 'POST',
-      url: `https://api.github.com/repos/${pro.owner}/${pro.repo}/issues`,
+      url: `https://api.github.com/repos/bill-lai/bill-lai.github.io/issues`,
       data: {
-        labels: [pro.issuesLabel],
-        body: config
+        title: config.title,
+        labels: [pro.issuesLabel, config.id],
+        body: [
+          config.head && config.head.md,
+          body,
+          config.foot && config.foot.md,
+        ].filter(Boolean).join('')
       }
+    }).then(res => {
+      return {
+        issues: {
+          number: res.data.number,
+          commentsUrl: res.data.comments_url
+        }
+      }
+    }).catch(err => {
+      // console.error(err)
+      return Promise.reject(err)
     })
   } else {
-    return config
+    return Promise.resolve({})
   }
 }
 
@@ -126,7 +148,6 @@ const genArticleConfig = (articlePath) => {
     .then(base => perfectArticleData(articlePath, base))
 
   return promise
-    .then(base => writeConfig(filename, base))
     .then(base => {
       if (base.template) return base;
       
@@ -151,7 +172,8 @@ const genArticleConfig = (articlePath) => {
                 ...analysisArticleMD(tempStr, tempConfig.id),
                 dirs: navs,
                 body: html,
-                dir: tempDir
+                dir: tempDir,
+                md: tempStr
               }
             })
           )
@@ -160,7 +182,9 @@ const genArticleConfig = (articlePath) => {
         }
       }
 
-      return Promise.all(tempPromises).then(() => config)
+      return Promise.all(tempPromises).then(
+        () => ({ config, base })
+      )
     })
 }
 
@@ -171,11 +195,23 @@ const genArticle = (articlePath) => {
   }
 
   const readFilePromise = readFile(articlePath, paths.main) || Promise.resolve('')
+  const filename = path.resolve(articlePath, paths.describe)
 
   return Promise.all([
     readFilePromise,
     genArticleConfig(articlePath)
-  ]).then(([body, base]) => {
+  ])
+  .then(([body, data]) => 
+    data.config
+      ? articleJoinIssues(data.config, body)
+          .then(attach => 
+            writeConfig(filename, {...data.base, ...attach})
+              .then(() => ([body, {...data.config, ...attach}]))
+          )
+      : writeConfig(filename, data)
+          .then(() => [body, data])
+  )
+  .then(([body, base]) => {
     const { html, navs } = analysisArticleMD(body, base.id)
     const config = { 
       ...base,

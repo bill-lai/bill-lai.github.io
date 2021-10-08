@@ -40,7 +40,7 @@ const findDir = (dirs: Array<NavItem>, title: string): NavItem | null => {
 
 const MarkerBody = withScreenShow(({html}: { html: string }) => 
   <div 
-    className="article-body" 
+    className="marked-body" 
     dangerouslySetInnerHTML={{__html: html}} 
   />
 )
@@ -116,7 +116,7 @@ const ArticleInfo = () => {
             selector="h2,h3"
             onShowChange={titleShowScreenChange}
           />
-          <Commit className="commit-layer" articleId={id} />
+          <Commit className="commit-layer" {...article.issues} />
           
         </React.Fragment>
        }
