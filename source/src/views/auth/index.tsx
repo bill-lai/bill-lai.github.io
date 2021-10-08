@@ -25,16 +25,20 @@ const Auth = () => {
   const [step, setStep] = React.useState(Step.UN)
   const next = (newStep: Step) => {
     setStep(newStep)
-    const gotoSteps = [
+    const asyncSteps = [
       Step.AUTH_REFUSE, 
-      Step.TOKEN_SUCCESS, 
       Step.TOKEN_ERR
     ]
+    const steps = [
+      Step.TOKEN_SUCCESS, 
+    ]
 
-    if (gotoSteps.includes(newStep)) {
+    if (asyncSteps.includes(newStep)) {
       setTimeout(() => {
         githubApi.recoveryHist()
       }, 2000)
+    } else if (steps.includes(newStep)) {
+      githubApi.recoveryHist()
     }
   }
 

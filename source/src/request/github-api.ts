@@ -29,27 +29,30 @@ export const recoveryHist = () => {
 }
 
 
-let token: { token: string; type: string; } | null = null
 // 获取token
-export const getToken = (code: string) => {
-  if (token) {
-    return Promise.resolve(token)
-  } else {
+export const getToken = (code?: string) => {
+  const cacheGetToken = sessionStorage.getItem('getToken')
+  if (cacheGetToken) {
+    const { code: ccode, token: ctoken } = JSON.parse(cacheGetToken)
+
+    if (!code && ccode === code) {
+      return Promise.resolve(ctoken)
+    }
+  } else if (code) {
     return axios.post(config.getToken, {
       client_id: clientId,
       client_secret: clientSecret,
       code
     }).then((res) => {
-      const { access_token, token_type } = strToParams(res)
+      const { access_token } = strToParams(res)
       if (access_token) {
-        token = { 
-          token: access_token, 
-          type: token_type 
-        }
-        return token
+        sessionStorage.setItem('getToken', JSON.stringify({code, token: access_token}))
+        return access_token 
       } else {
         return null
       }
     })
   }
+
+  return Promise.resolve(null)
 }
