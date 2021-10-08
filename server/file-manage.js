@@ -5,6 +5,8 @@ const paths = require('./config')
 const chokidar = require('chokidar')
 const { gendNewId, analysisMarked } = require('./util')
 const state = require('./state')
+const pro = require('../config/dataProduce')
+const axios = require('axios').default
 
 const analysisArticleMD = (mdstr, id) => {
   return analysisMarked(mdstr, `/${paths.outputArticleDir}/${id}/`)
@@ -100,7 +102,20 @@ const perfectArticleData = (path, base = {}) => {
   config.mtime = mtime.getTime()
   config.ctime = config.ctime || ctime.getTime()
 
-  return config
+  
+  if (!config.commentsUrl) {
+    axios({
+      headers: { Authorization: `token ${pro.token}` },
+      method: 'POST',
+      url: `https://api.github.com/repos/${pro.owner}/${pro.repo}/issues`,
+      data: {
+        labels: [pro.issuesLabel],
+        body: config
+      }
+    })
+  } else {
+    return config
+  }
 }
 
 // 关联模板文档

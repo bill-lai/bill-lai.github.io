@@ -1,6 +1,5 @@
 import axios from 'axios'
-import devData from './dev.data'
-import { gendUrl, equalUrl } from 'src/util'
+import { gendUrl } from 'src/util'
 import {
   AxiosRequestConfig as BaseAxiosReqConfig,
   AxiosStatic as BaseAxiosStatic,
@@ -67,7 +66,12 @@ export type AxiosStatic<Config, URLS = keyof Config> =
     create<T extends URLS>(config?: AxiosReqConfig<Config, T>): AxiosInstance<Config, URLS>;
   }
 
-
+type needHeadReq = {
+  getHeader: () => {[key: string]: any} | void,
+  errHandle?: (res?: BaseAxiosResponse) => void,
+  urls: Array<string>
+}
+type needHeadReqs = Array<needHeadReq> 
 
 let isSetup = false
 const setupAxios = <
@@ -77,27 +81,39 @@ const setupAxios = <
   RetAxios = AxiosStatic<Interface, URL>
 >(
   urlMaps: URLS, 
+  _needHeadReqs: needHeadReqs | needHeadReq = [],
   notLoadUrls: Array<string> = Object.values(urlMaps)
 ) => {
   if (isSetup) return axios as unknown as RetAxios
 
-
   const urls = Object.values(urlMaps)
   
+  const needHeadReqs = !Array.isArray(_needHeadReqs) 
+    ? [_needHeadReqs] 
+    : _needHeadReqs
+
+  const needHeadHandler = (
+    url: string, 
+    handler: (config: needHeadReq) => void
+  ) => {
+    needHeadReqs.forEach(config => {
+      urls.includes(url) && handler(config)
+    })
+  }
+
   const stopRequest = () => {
     const source = axios.CancelToken.source()
     source.cancel('Illegal request')
   }
 
-  const errorHandler = (res: BaseAxiosResponse, msg: string = '出了点小问题') => {
-    console.log(res.status)
-    if (process.env.NODE_ENV === 'development') {
-      if (res.config && res.config.url) {
-        let key = Object.keys(devData).find(tempUrl => equalUrl(tempUrl, res.config.url as string))
-        if (key) {
-          return (devData as any)[key]
-        }
-      }
+  const errorHandler = (
+    res: BaseAxiosResponse, 
+    msg: string = '出了点小问题'
+  ) => {
+    if (res.config && res.config.url) {
+      needHeadHandler(res.config.url, ({errHandle}) => {
+        errHandle && errHandle()
+      })
     }
     return Promise.reject(res)
   }
@@ -111,6 +127,15 @@ const setupAxios = <
       stopRequest();
       return config 
     }
+
+    needHeadHandler(config.url, ({getHeader}) => {
+      const head = getHeader()
+      if (head) {
+        config.headers = config.headers 
+          ? { ...config.headers, ...head }
+          : head
+      }
+    })
 
     if (notLoadUrls.includes(config.url)) {
       return config

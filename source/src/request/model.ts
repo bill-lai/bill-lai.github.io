@@ -35,3 +35,25 @@ export type Column = {
 export type ColumnList = Array<Column>
 
 export type Columns = Array<Column>
+
+export type UserInfo = {
+  avatar_url: string,
+  created_at: string,
+  html_url: string,
+  id: number
+  login: string
+  type: string
+}
+
+export type Commit = {
+  id: string,
+  number: number,
+  title: string,
+  user: UserInfo,
+  labels: Array<string>,
+  body: string,
+  created_at: string,
+  reactions: []
+}
+
+export type CommitList = Array<Commit>

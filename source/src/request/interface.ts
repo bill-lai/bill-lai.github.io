@@ -2,13 +2,24 @@ import {
   getArticle,
   getColumnList,
   getUserInfo,
-  getToken
+  getToken,
+  postComment,
+  getComment
 } from './config'
 
 import {
   Article,
-  ColumnList
+  ColumnList,
+  UserInfo,
+  CommitList
 } from './model'
+
+type ComponentBaseReq = {
+  params: {
+    owner: string,
+    repo: string,
+  }
+}
 
 type Interface = {
   [getArticle]: {
@@ -22,6 +33,7 @@ type Interface = {
   },
   [getUserInfo]: {
     method: 'GET',
+    response: UserInfo
   },
   [getToken]: {
     method: 'POST',
@@ -31,7 +43,22 @@ type Interface = {
       code: string
     },
     response: string
-  }
+  },
+  [getComment]: ComponentBaseReq & {
+    method: 'GET',
+    params: {
+      creator: string,
+      labels: string
+    },
+    response: CommitList
+  },
+  [postComment]: ComponentBaseReq & {
+    method: 'POST',
+    data: {
+      body: string,
+      labels: Array<string>
+    }
+  },
 }
 
 export default Interface
