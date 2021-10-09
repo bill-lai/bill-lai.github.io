@@ -26,14 +26,14 @@ export function useGlobalState<T, K>(
   key: string, 
   getPromise: () => Promise<T>,
   transform: (data: T) => K,
-): [K | undefined, React.Dispatch<React.SetStateAction<K | undefined>>]
+): [K | undefined, React.Dispatch<React.SetStateAction<K | undefined>>, (data: T) => void]
 
 export function useGlobalState<T, K>(
   key: string, 
   getPromise: () => Promise<T>,
   transform: (data: T) => K,
   defaultVal: T,
-): [K, React.Dispatch<React.SetStateAction<K>>]
+): [K, React.Dispatch<React.SetStateAction<K>>, (data: T) => void]
 
 
 export function useGlobalState <T, K>(
@@ -53,7 +53,9 @@ export function useGlobalState <T, K>(
     const promise = statePromises[key] || getPromise()
     const statePromise = promise.then(
       data => {
-        setValue(transform ? transform(data) : data)
+        setTransformValue
+          ? setTransformValue(data)
+          : setValue(data)
         state[key] = data
         delete statePromises[key]
         return data
@@ -64,9 +66,18 @@ export function useGlobalState <T, K>(
     statePromise.catch(() => delete statePromises[key])
   }
 
+  const setTransformValue = transform && ((value: T) => 
+    setValue((transform as (data: T) => K)(value))
+  )
   
   const [value, setValue] = React.useState(() => 
     defaultVal && (transform ? transform(defaultVal) : defaultVal)
   )
-  return [value, setValue]
+
+
+  return [
+    value, 
+    setValue,
+    setTransformValue
+  ]
 }

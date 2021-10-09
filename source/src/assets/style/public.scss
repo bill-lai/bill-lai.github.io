@@ -4,6 +4,7 @@ html {
   --main-font-color: #333;
   --vice-font-color: #666;
   --background-color: #f7f7f7;
+  --border-color: #ececec;
   font-size: 14px;
 }
 
@@ -61,4 +62,9 @@ html {
   &:hover {
     color: #157b75;
   }
+}
+
+.disable {
+  pointer-events: none !important;
+  color: #6d6d6d !important;
 }

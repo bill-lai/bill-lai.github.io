@@ -8,7 +8,7 @@ import { Navigation, Navs } from 'src/components/navigation'
 import { withScreenShow } from 'src/hoc'
 import { useGlobalState } from 'src/state'
 import app from 'src/platform'
-import Commit from './commit'
+import Interact from './interact'
 
 
 type NavItem = {
@@ -116,7 +116,7 @@ const ArticleInfo = () => {
             selector="h2,h3"
             onShowChange={titleShowScreenChange}
           />
-          <Commit className="commit-layer" {...article.issues} />
+          <Interact className="commit-layer" {...article} />
           
         </React.Fragment>
        }

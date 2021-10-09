@@ -24,8 +24,11 @@ export type Article = ArticleBase & {
   dirs: ArticleDirs
   foot: ArticleTemp,
   issues: {
-    commentsUrl: string,
     number: number
+  },
+  column: {
+    id: string,
+    title: string
   }
 }
 
@@ -59,5 +62,15 @@ export type Commit = {
   created_at: string,
   reactions: []
 }
+
+export type Reaction = {
+  content: '+1' | '-1',
+  created_at: string,
+  id: number,
+  user: UserInfo
+}
+
+export type Reactions = Array<Reaction>
+
 
 export type CommitList = Array<Commit>

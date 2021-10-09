@@ -14,7 +14,7 @@
 
   .right-layer {
     flex: none;
-    border-left: 1px solid #ececec;
+    border-left: 1px solid var(--border-color);
 
     .right {
       overflow: hidden;

@@ -1,7 +1,6 @@
 import { axios } from './index'
 import * as config from './config'
 import { strToParams } from 'src/util'
-import { CommitList } from './model'
 
 const clientId = 'dbac9f422a3f03c121f1'
 const clientSecret = '26a67f075778cac68d6d2fc7e4e5086519745009'
@@ -148,7 +147,8 @@ export const addCommit = (body: AddCommitBody) => {
 }
 
 // 获取评论列表
-export const getCommits = (id: string) => {
+export const getCommits = (id: number) => {
+  console.log(id)
   return axios.get(config.getComment, {
     params: {
       labels: '',
@@ -158,3 +158,12 @@ export const getCommits = (id: string) => {
     }
   }).catch(() => [])
 }
+
+export const getArticleReactions = (id: number) => 
+  axios.get(config.getArticleReactions, {
+    params: {
+      id: id,
+      owner,
+      repo,
+    }
+  })

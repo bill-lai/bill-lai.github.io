@@ -1,10 +1,12 @@
+import { Reactions } from '.'
 import {
   getArticle,
   getColumnList,
   getUserInfo,
   getToken,
   postComment,
-  getComment
+  getComment,
+  getArticleReactions
 } from './config'
 
 import {
@@ -14,7 +16,7 @@ import {
   CommitList
 } from './model'
 
-type ComponentBaseReq = {
+type GitHubBaseReq = {
   params: {
     owner: string,
     repo: string,
@@ -44,7 +46,7 @@ type Interface = {
     },
     response: string
   },
-  [getComment]: ComponentBaseReq & {
+  [getComment]: GitHubBaseReq & {
     method: 'GET',
     params: {
       creator: string,
@@ -52,13 +54,20 @@ type Interface = {
     },
     response: CommitList
   },
-  [postComment]: ComponentBaseReq & {
+  [postComment]: GitHubBaseReq & {
     method: 'POST',
     data: {
       body: string,
       labels: Array<string>
     }
   },
+  [getArticleReactions]: GitHubBaseReq & {
+    method: 'GET',
+    params: {
+      id: number
+    },
+    response: Reactions
+  }
 }
 
 export default Interface

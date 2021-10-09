@@ -107,7 +107,7 @@ const perfectArticleData = (path, base = {}) => {
 
 // 关联github issues
 const articleJoinIssues = (config, body) => {
-  if (!config.commentsUrl) {
+  if (!config.issues) {
     return axios({
       headers: { 
         Authorization: `token ${pro.token}`,
@@ -128,7 +128,8 @@ const articleJoinIssues = (config, body) => {
       return {
         issues: {
           number: res.data.number,
-          commentsUrl: res.data.comments_url
+          commentsUrl: res.data.comments_url,
+          reactionsUrl: res.data.reactions.url,
         }
       }
     }).catch(err => {

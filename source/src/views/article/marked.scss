@@ -17,7 +17,7 @@
   :not(pre) code {
     background-color: rgba(255,190,11,.2);
     box-shadow: 0 0 2px rgb(255 190 11 / 20%);
-    font-size: 1rem;
+    font-size: 0.83em;
     font-weight: 700;
     color: #333;
     padding: .065em .4em;
@@ -75,15 +75,14 @@
     word-wrap: normal;
     tab-size: 4;
     hyphens: none;
-    padding: 1rem 2rem;
+    padding: 0.83em 1.6em;
     border-radius: 5px;
-    margin: 2rem 0;
+    margin: 1.6em 0;
     overflow: auto;
     background: var(--background)
   }
 
   pre > code {
-    font-size: 1rem;
     box-shadow: 0 0 20px rgba(0,0,0,.1);
     color: var(--foreground);
     background: var(--background);

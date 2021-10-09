@@ -39,6 +39,12 @@ const genArticleData = article => {
       }
     }
   })
+  if (article.column) {
+    article.column = {
+      id: article.column.id,
+      title: article.column.title
+    }
+  }
   delete data.dir
   delete data.template
   
@@ -55,6 +61,7 @@ const genColumnData = column => ({
       delete article.dirs
       delete article.body
       delete article.issues
+      delete article.column
       
       config.templates.forEach(key => {
         delete article[key]
@@ -73,6 +80,7 @@ const getArticle = (queryId) =>
       for (let column of columns) {
         const article = column.articles.find(({id}) => id === queryId)
         if (article) {
+          article.column = column
           return article
         }
       }
