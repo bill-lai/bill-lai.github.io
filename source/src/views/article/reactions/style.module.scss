@@ -1,0 +1,24 @@
+.reaction {
+  display: inline-flex;
+  align-items: center;
+  color: var(--vice-font-color);
+  transition: color .3s ease;
+  cursor: pointer;
+
+  &:not(:first-child) {
+    margin-left: 1.71rem;
+  }
+
+  svg {
+    fill: currentColor;
+    margin-right: 5px;
+    margin-top: -5px;
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+
+  &.active,
+  &:hover {
+    color: var(--link-color);
+  }
+}

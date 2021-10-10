@@ -1,6 +1,6 @@
-import axios from 'axios'
-import { gendUrl } from 'src/util'
-import {
+import { equalUrl, gendUrl } from 'src/util'
+import axios, {
+  Method as BaseMethod,
   AxiosRequestConfig as BaseAxiosReqConfig,
   AxiosStatic as BaseAxiosStatic,
   AxiosResponse as BaseAxiosResponse
@@ -8,7 +8,7 @@ import {
 
 
 type AxiosConfigArgBase = {
-  url?: BaseAxiosReqConfig['url'],
+  url: BaseAxiosReqConfig['url'],
   params?: BaseAxiosReqConfig['params'],
   data?: BaseAxiosReqConfig['data'],
   response?: any
@@ -66,38 +66,69 @@ export type AxiosStatic<Config, URLS = keyof Config> =
     create<T extends URLS>(config?: AxiosReqConfig<Config, T>): AxiosInstance<Config, URLS>;
   }
 
-type needHeadReq = {
-  getHeader: () => {[key: string]: any} | void,
-  errHandle?: (res?: BaseAxiosResponse) => void,
-  urls: Array<string>
+export type NeedHeadReq<URL> = {
+  handler: () => {[key in keyof BaseAxiosReqConfig]: 
+    BaseAxiosReqConfig[key]} | undefined,
+  errHandler?: (res?: BaseAxiosResponse) => void,
+  urls: Array<URL>
 }
-type needHeadReqs = Array<needHeadReq> 
+export type NeedHeadReqs<URL> = Array<NeedHeadReq<URL>> 
+
+export type BaseInterfaces = {
+  [key in BaseMethod]?: Array<AxiosConfigArgBase>
+}
+
+export type MethodURLS<Interfaces, T extends keyof Interfaces> = 
+Interfaces[T] extends Array<{url: infer U}> ? U : string
+
+export type URLS<Interfaces> = Interfaces extends 
+  { [key: string]: Array<{url: infer U}> } 
+    ? U : string
+
+export type Interface<Interfaces, URL> = {
+  [Method in keyof Interfaces] : 
+    URL extends MethodURLS<Interfaces, Method> 
+      ? {
+          [ iteratorkey in keyof Interfaces[Method] ]:
+            Interfaces[Method][iteratorkey] extends {url: string}
+              ? Interfaces[Method][iteratorkey]['url'] extends URL
+                ? Interfaces[Method][iteratorkey] & { method: Method }
+                : never
+              : never
+        }[keyof Interfaces[Method]]
+      : never
+}[keyof Interfaces]
+
 
 let isSetup = false
 const setupAxios = <
-  Interface, 
-  URLS extends {[key: string]: string}, 
-  URL = URLS[keyof URLS], 
-  RetAxios = AxiosStatic<Interface, URL>
+  Interfaces extends BaseInterfaces, 
+  URL = Interfaces extends 
+    { [key: string]: Array<{url: infer U}> } 
+      ? U : string,
+  Instance = Interface<Interfaces, URL>,
+  RetAxios = AxiosStatic<Instance, URL>,
 >(
-  urlMaps: URLS, 
-  _needHeadReqs: needHeadReqs | needHeadReq = [],
-  notLoadUrls: Array<string> = Object.values(urlMaps)
+  urlMaps: { [key: string]: URL }, 
+  _needHeadReqs: NeedHeadReqs<URL> | NeedHeadReq<URL> = [],
+  notLoadUrls = Object.values(urlMaps)
 ) => {
   if (isSetup) return axios as unknown as RetAxios
 
   const urls = Object.values(urlMaps)
-  
   const needHeadReqs = !Array.isArray(_needHeadReqs) 
     ? [_needHeadReqs] 
     : _needHeadReqs
 
+  const includesUrl = (urls: Array<URL>, url: string) =>
+    urls.some(tempUrl => equalUrl(tempUrl as unknown as string, url))
+
   const needHeadHandler = (
     url: string, 
-    handler: (config: needHeadReq) => void
+    handler: (config: NeedHeadReq<URL>) => void
   ) => {
     needHeadReqs.forEach(config => {
-      urls.includes(url) && handler(config)
+      includesUrl(config.urls, url) && handler(config)
     })
   }
 
@@ -111,8 +142,8 @@ const setupAxios = <
     msg: string = '出了点小问题'
   ) => {
     if (res.config && res.config.url) {
-      needHeadHandler(res.config.url, ({errHandle}) => {
-        errHandle && errHandle()
+      needHeadHandler(res.config.url, ({errHandler}) => {
+        errHandler && errHandler()
       })
     }
     return Promise.reject(res)
@@ -123,21 +154,28 @@ const setupAxios = <
       config.url = gendUrl(config.url, config.params)
     }
 
-    if (!config.url || !urls.includes(config.url)) {
+    if (!config.url || !includesUrl(urls, config.url)) {
       stopRequest();
       return config 
     }
 
-    needHeadHandler(config.url, ({getHeader}) => {
-      const head = getHeader()
-      if (head) {
-        config.headers = config.headers 
-          ? { ...config.headers, ...head }
-          : head
+    needHeadHandler(config.url, ({handler}) => {
+      const addConfig: any = handler()
+      if (addConfig) {
+        const retConfig: any = config
+        for (const key in addConfig) {
+          retConfig[key] = retConfig[key]
+            ? { 
+                ...retConfig[key], 
+                ...addConfig[key]
+              } 
+            : addConfig[key]
+        }
+        return retConfig
       }
     })
 
-    if (notLoadUrls.includes(config.url)) {
+    if (includesUrl(notLoadUrls, config.url)) {
       return config
     } else {
       return config
@@ -145,7 +183,7 @@ const setupAxios = <
   })
 
   axios.interceptors.response.use(res => {
-    if (res.status !== 200) {
+    if (res.status < 200 || res.status >= 300) {
       return errorHandler(res)
     } else {
       return res.data

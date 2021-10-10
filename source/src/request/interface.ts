@@ -1,4 +1,3 @@
-import { Reactions } from '.'
 import {
   getArticle,
   getColumnList,
@@ -6,21 +5,36 @@ import {
   getToken,
   postComment,
   getComment,
-  getArticleReactions
+  getArticleReactions,
+  addArticleReaction,
+  delArticleReaction,
+  authorize
 } from './config'
 
 import {
   Article,
   ColumnList,
   UserInfo,
-  CommitList
+  CommentList,
+  Reaction,
+  Reactions,
+  ReactionContent
 } from './model'
+
+import {
+  URLS as SURLS,
+  MethodURLS as SMethodURLS
+} from './setup'
 
 type GitHubBaseReq = {
   params: {
     owner: string,
     repo: string,
   }
+}
+
+type GithubReactionBaseReq = GitHubBaseReq & {
+  params: { id: number }
 }
 
 type Interface = {
@@ -49,10 +63,9 @@ type Interface = {
   [getComment]: GitHubBaseReq & {
     method: 'GET',
     params: {
-      creator: string,
       labels: string
     },
-    response: CommitList
+    response: CommentList
   },
   [postComment]: GitHubBaseReq & {
     method: 'POST',
@@ -61,13 +74,91 @@ type Interface = {
       labels: Array<string>
     }
   },
-  [getArticleReactions]: GitHubBaseReq & {
+  [getArticleReactions]: GithubReactionBaseReq & {
     method: 'GET',
-    params: {
-      id: number
-    },
     response: Reactions
+  },
+  [addArticleReaction]: GithubReactionBaseReq & {
+    method: 'POST',
+    data: {
+      content: ReactionContent
+    },
+    response: Reaction
+  },
+  [delArticleReaction]: GithubReactionBaseReq & {
+    method: 'DELETE',
+    params: {
+      reactionId: number
+    }
   }
 }
+
+export type _Interfaces = {
+  GET: [
+    {
+      url: typeof getArticle,
+      params: { id: string },
+      response: Article
+    },
+    {
+      url: typeof getColumnList,
+      response: ColumnList
+    },
+    {
+      url: typeof getUserInfo,
+      response: UserInfo
+    },
+    {
+      url: typeof authorize
+    },
+    GitHubBaseReq & {
+      url: typeof getComment,
+      params: { labels: string },
+      response: CommentList
+    },
+    GithubReactionBaseReq & {
+      url: typeof getArticleReactions,
+      response: Reactions
+    },
+  ],
+  POST: [
+    {
+      url: typeof getToken,
+      data: {
+        client_id: string,
+        client_secret: string,
+        code: string
+      },
+      response: string
+    },
+    GitHubBaseReq & {
+      url: typeof postComment,
+      data: {
+        body: string,
+        labels: Array<string>
+      }
+    },
+    GithubReactionBaseReq & {
+      url: typeof addArticleReaction,
+      data: {
+        content: ReactionContent
+      },
+      response: Reaction
+    },
+  ],
+  DELETE: [
+    GithubReactionBaseReq & {
+      url: typeof delArticleReaction,
+      method: 'DELETE',
+      params: {
+        reactionId: number
+      }
+    }
+  ]
+}
+
+export type URLS = SURLS<_Interfaces>
+export type MethodURLS<Method  extends keyof _Interfaces> = 
+  SMethodURLS<_Interfaces, Method>
 
 export default Interface

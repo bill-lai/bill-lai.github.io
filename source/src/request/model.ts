@@ -52,7 +52,7 @@ export type UserInfo = {
   type: string
 }
 
-export type Commit = {
+export type Comment = {
   id: string,
   number: number,
   title: string,
@@ -63,8 +63,9 @@ export type Commit = {
   reactions: []
 }
 
+export type ReactionContent = '+1' | '-1' | 'laugh' | 'confused' | 'heart' | 'hooray' | 'rocket' | 'eyes'
 export type Reaction = {
-  content: '+1' | '-1',
+  content: ReactionContent,
   created_at: string,
   id: number,
   user: UserInfo
@@ -73,4 +74,4 @@ export type Reaction = {
 export type Reactions = Array<Reaction>
 
 
-export type CommitList = Array<Commit>
+export type CommentList = Array<Comment>

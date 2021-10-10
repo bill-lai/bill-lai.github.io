@@ -1,13 +1,18 @@
-import { axios } from './index'
+import { axios, NeedHeadReqs } from './index'
 import * as config from './config'
 import { strToParams } from 'src/util'
+import { ReactionContent } from './model'
+import { URLS } from './interface'
 
 const clientId = 'dbac9f422a3f03c121f1'
 const clientSecret = '26a67f075778cac68d6d2fc7e4e5086519745009'
 const redirectUri = 'https://bill-lai.github.io/auth'
-const owner = `bill-lai`
-const repo = `bill-lai.github.io`
-const issuesLabel = [`${owner}-blog`]
+const baseOR = {
+  owner: `bill-lai`,
+  repo: `bill-lai.github.io`
+}
+const issuesLabel = [`${baseOR.owner}-blog`]
+const retunf = Promise.resolve(undefined)
 
 const scope = `public_repo`
 const OriginKey = `originPathname`
@@ -40,17 +45,41 @@ export const setStoreTokenConfig = (config: SessionToken) =>
 export const delStoreTokenConfig = () =>
   store.removeItem(GetTokenKey)
 
-// 需要token的接口处理
-export const githubReqHandler = {
-  getHeader() {
-    const tokenConfig = getStoreTokenConfig()
-    if (tokenConfig) {
-      return { Authorization: `token ${tokenConfig.token}` }
-    }
+export const githubReqHandler: NeedHeadReqs<URLS> = [
+  // 需要token的接口处理
+  {
+    handler() {
+      const tokenConfig = getStoreTokenConfig()
+      if (tokenConfig) {
+        return {
+          headers: { 
+            Authorization: `token ${tokenConfig.token}`
+          }
+        }
+      }
+    },
+    errHandler: delStoreTokenConfig,
+    urls: [
+      config.getUserInfo,
+      config.addArticleReaction,
+      config.delArticleReaction
+    ] as Array<URLS>
   },
-  errHandle: delStoreTokenConfig,
-  urls: [config.getUserInfo]
-}
+  // 需要添加baseOR的链接
+  {
+    handler() {
+      return {
+        params: baseOR
+      }
+    },
+    urls: [
+      config.postComment,
+      config.getArticleReactions,
+      config.addArticleReaction,
+      config.delArticleReaction
+    ] as Array<URLS>
+  }
+]
 
 // 本地是否已授权
 export const isLocalAuth = () => {
@@ -83,6 +112,7 @@ export const getUserInfo = async (isAuth = false) =>
   axios.get(config.getUserInfo)
     .catch(() => {
       isAuth && auth()
+      return retunf
     })
 
 // 恢复上次跳转授权
@@ -139,10 +169,7 @@ export const addCommit = (body: AddCommitBody) => {
   return axios.post(
     config.postComment,
     data, 
-    {
-      params: { owner, repo },
-      data
-    }
+    { params: baseOR, data }
   )
 }
 
@@ -150,20 +177,31 @@ export const addCommit = (body: AddCommitBody) => {
 export const getCommits = (id: number) => {
   console.log(id)
   return axios.get(config.getComment, {
-    params: {
-      labels: '',
-      owner,
-      repo,
-      creator: owner
-    }
+    params: { ...baseOR, labels: '' }
   }).catch(() => [])
 }
 
 export const getArticleReactions = (id: number) => 
-  axios.get(config.getArticleReactions, {
+axios.get(config.getArticleReactions, {
+    params: { ...baseOR, id }
+  })
+
+export const addArticleReaction = (issueId: number, content: ReactionContent) => {
+  const data = { content }
+  return axios.post(config.addArticleReaction, 
+    data, 
+    {
+      params: { ...baseOR, id: issueId },
+      data
+    }
+  )
+}
+
+export const delArticleReaction = (issueId: number, reactionId: number) =>
+  axios.delete(config.delArticleReaction, {
     params: {
-      id: id,
-      owner,
-      repo,
+      ...baseOR,
+      id: issueId,
+      reactionId
     }
   })
