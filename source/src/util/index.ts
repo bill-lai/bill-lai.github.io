@@ -72,7 +72,10 @@ export const gendUrl = (tempUrl: string, params: { [key: string]: any}) => {
   return url
 }
 
+export const includesUrl = (tempUrls: Array<string>, url: string) =>
+  tempUrls.some(tempUrl => equalUrl(tempUrl, url)) 
 
+  
 export const strToParams = (str: string) => {
   if (str[0] === '?') {
     str = str.substr(1)

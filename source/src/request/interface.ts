@@ -22,9 +22,8 @@ import {
 } from './model'
 
 import {
-  ExtractInterfacesURLS,
-  ExtractInterfacesMethodURLS,
-  ExtractInterface
+  ExtractInterfacesURL,
+  ExtractInterfacesMethodURL,
 } from './setup'
 
 type GitHubBaseReq = {
@@ -38,63 +37,7 @@ type GithubReactionBaseReq = GitHubBaseReq & {
   params: { id: number }
 }
 
-type Interface = {
-  [getArticle]: {
-    method: 'GET',
-    params: { id: string },
-    response: Article
-  },
-  [getColumnList]: {
-    method: 'GET',
-    response: ColumnList
-  },
-  [getUserInfo]: {
-    method: 'GET',
-    response: UserInfo
-  },
-  [getToken]: {
-    method: 'POST',
-    data: {
-      client_id: string,
-      client_secret: string,
-      code: string
-    },
-    response: string
-  },
-  [getComment]: GitHubBaseReq & {
-    method: 'GET',
-    params: {
-      labels: string
-    },
-    response: CommentList
-  },
-  [postComment]: GitHubBaseReq & {
-    method: 'POST',
-    data: {
-      body: string,
-      labels: Array<string>
-    }
-  },
-  [getArticleReactions]: GithubReactionBaseReq & {
-    method: 'GET',
-    response: Reactions
-  },
-  [addArticleReaction]: GithubReactionBaseReq & {
-    method: 'POST',
-    data: {
-      content: ReactionContent
-    },
-    response: Reaction
-  },
-  [delArticleReaction]: GithubReactionBaseReq & {
-    method: 'DELETE',
-    params: {
-      reactionId: number
-    }
-  }
-}
-
-export type _Interfaces = {
+export type Interfaces = {
   GET: [
     {
       url: typeof getArticle,
@@ -107,7 +50,8 @@ export type _Interfaces = {
     },
     {
       url: typeof getUserInfo,
-      response: UserInfo
+      response: UserInfo,
+      headers: { Authorization: string }
     },
     {
       url: typeof authorize,
@@ -163,8 +107,8 @@ export type _Interfaces = {
   ]
 }
 
-export type URLS = ExtractInterfacesURLS<_Interfaces>
-export type MethodURLS<Method  extends keyof _Interfaces> = 
-  ExtractInterfacesMethodURLS<_Interfaces, Method>
+export type URL = ExtractInterfacesURL<Interfaces>
+export type MethodURL<Method  extends keyof Interfaces> = 
+  ExtractInterfacesMethodURL<Interfaces, Method>
   
-export default Interface
+export default Interfaces

@@ -1,8 +1,7 @@
-import { axios, NeedHeadReqs } from './index'
+import { axios, InterceptNeed, InterceptNeeds, Interfaces, ExtractInterfacesURL, InstanceConfig } from './index'
 import * as config from './config'
-import { strToParams } from 'src/util'
+import { paramsToStr, strToParams } from 'src/util'
 import { ReactionContent } from './model'
-import { URLS } from './interface'
 
 const clientId = 'dbac9f422a3f03c121f1'
 const clientSecret = '26a67f075778cac68d6d2fc7e4e5086519745009'
@@ -45,16 +44,17 @@ export const setStoreTokenConfig = (config: SessionToken) =>
 export const delStoreTokenConfig = () =>
   store.removeItem(GetTokenKey)
 
-export const githubReqHandler: NeedHeadReqs<URLS> = [
+export const githubReqHandler: InterceptNeeds<Interfaces> = [
   // 需要token的接口处理
   {
-    handler() {
+    reqHandler() {
       const tokenConfig = getStoreTokenConfig()
       if (tokenConfig) {
         return {
-          headers: { 
-            Authorization: `token ${tokenConfig.token}`
-          }
+          headers: { Authorization: '' }
+          // headers: { 
+          //   Authorization: `token ${tokenConfig.token}`
+          // }
         }
       }
     },
@@ -63,11 +63,11 @@ export const githubReqHandler: NeedHeadReqs<URLS> = [
       config.getUserInfo,
       config.addArticleReaction,
       config.delArticleReaction
-    ] as Array<URLS>
+    ]
   },
   // 需要添加baseOR的链接
   {
-    handler() {
+    reqHandler() {
       return {
         params: baseOR
       }
@@ -77,9 +77,39 @@ export const githubReqHandler: NeedHeadReqs<URLS> = [
       config.getArticleReactions,
       config.addArticleReaction,
       config.delArticleReaction
-    ] as Array<URLS>
+    ]
   }
 ]
+
+const testURL = [
+  config.getUserInfo,
+  config.addArticleReaction,
+  config.delArticleReaction
+] as [
+  typeof config.getUserInfo,
+  typeof config.addArticleReaction,
+  typeof config.delArticleReaction,
+]
+let test: InterceptNeed<Interfaces, typeof testURL> = {
+  reqHandler() {
+    const tokenConfig = getStoreTokenConfig()
+    if (tokenConfig) {
+      return {
+        headers: {Authorization: ''},
+        data: {content: '+1'}
+        // headers: { 
+        //   Authorization: `token ${tokenConfig.token}`
+        // }
+      }
+    }
+  },
+  errHandler: delStoreTokenConfig,
+  urls: [
+    config.getUserInfo,
+    config.addArticleReaction,
+    config.delArticleReaction
+  ]
+}
 
 // 本地是否已授权
 export const isLocalAuth = () => {
@@ -190,7 +220,6 @@ axios.get(config.getArticleReactions, {
   })
 
 export const addArticleReaction = (issueId: number, content: ReactionContent) => {
-  const data = { content }
   return axios.post(config.addArticleReaction, 
     { content },
     { params: { ...baseOR, id: issueId } }
@@ -205,3 +234,12 @@ export const delArticleReaction = (issueId: number, reactionId: number) =>
       reactionId
     }
   })
+
+
+// type a = {
+//   'a': InstanceConfig<Interfaces, typeof config['delArticleReaction']>,
+//   'b': InstanceConfig<Interfaces, typeof config['addArticleReaction']>
+// }
+
+// let c:a[keyof a]
+// c.reqData.content = '+1'

@@ -1,7 +1,6 @@
 import * as React from "react"
 import { witchParentClass } from "src/hoc"
-import { Reactions, UserInfo, ReactionContent, config, githubApi } from "src/request"
-import { useGlobalState } from "src/state"
+import { Reactions, UserInfo, ReactionContent } from "src/request"
 import * as icons from './icons'
 import style from './style.module.scss'
 
