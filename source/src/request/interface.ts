@@ -22,8 +22,9 @@ import {
 } from './model'
 
 import {
-  URLS as SURLS,
-  MethodURLS as SMethodURLS
+  ExtractInterfacesURLS,
+  ExtractInterfacesMethodURLS,
+  ExtractInterface
 } from './setup'
 
 type GitHubBaseReq = {
@@ -109,7 +110,12 @@ export type _Interfaces = {
       response: UserInfo
     },
     {
-      url: typeof authorize
+      url: typeof authorize,
+      params: {
+        client_id: string,
+        redirect_uri: string,
+        scope: string
+      }
     },
     GitHubBaseReq & {
       url: typeof getComment,
@@ -157,8 +163,8 @@ export type _Interfaces = {
   ]
 }
 
-export type URLS = SURLS<_Interfaces>
+export type URLS = ExtractInterfacesURLS<_Interfaces>
 export type MethodURLS<Method  extends keyof _Interfaces> = 
-  SMethodURLS<_Interfaces, Method>
-
+  ExtractInterfacesMethodURLS<_Interfaces, Method>
+  
 export default Interface

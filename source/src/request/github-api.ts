@@ -91,6 +91,8 @@ export const isLocalAuth = () => {
 export const getAuthLink = () => {
   store.setItem(OriginKey, window.location.pathname)
 
+  
+
   return axios.getUri({
     url: config.authorize,
     params: {
@@ -168,7 +170,8 @@ export const addCommit = (body: AddCommitBody) => {
 
   return axios.post(
     config.postComment,
-    data, 
+    // data, 
+    undefined,
     { params: baseOR, data }
   )
 }
@@ -189,11 +192,8 @@ axios.get(config.getArticleReactions, {
 export const addArticleReaction = (issueId: number, content: ReactionContent) => {
   const data = { content }
   return axios.post(config.addArticleReaction, 
-    data, 
-    {
-      params: { ...baseOR, id: issueId },
-      data
-    }
+    { content },
+    { params: { ...baseOR, id: issueId } }
   )
 }
 
