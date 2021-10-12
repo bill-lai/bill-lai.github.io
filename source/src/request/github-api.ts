@@ -1,4 +1,4 @@
-import { axios, InterceptNeed, InterceptNeeds, Interfaces, ExtractInterfacesURL, InstanceConfig } from './index'
+import { axios, InterceptNeeds, Interfaces, OmitNever, OmitUncertain, ExtractInterfacesURL } from './index'
 import * as config from './config'
 import { paramsToStr, strToParams } from 'src/util'
 import { ReactionContent } from './model'
@@ -44,14 +44,35 @@ export const setStoreTokenConfig = (config: SessionToken) =>
 export const delStoreTokenConfig = () =>
   store.removeItem(GetTokenKey)
 
-export const githubReqHandler: InterceptNeeds<Interfaces> = [
+const handlerUrls = [
+  [
+    config.getUserInfo,
+    config.addArticleReaction,
+    config.delArticleReaction
+  ] as const,
+  [
+    config.postComment,
+    config.getArticleReactions,
+    config.addArticleReaction,
+    config.delArticleReaction
+  ] as const
+] as const
+
+
+let a: ExtractInterfacesURL<Interfaces>
+
+export const githubReqHandler: InterceptNeeds<Interfaces, typeof handlerUrls> = [
   // 需要token的接口处理
   {
-    reqHandler() {
+    reqHandler(config, a) {
+      config[0] === 8
+      // config.concat = 'asd'
+      // config.url
       const tokenConfig = getStoreTokenConfig()
       if (tokenConfig) {
+        
         return {
-          headers: { Authorization: '' }
+          
           // headers: { 
           //   Authorization: `token ${tokenConfig.token}`
           // }
@@ -59,11 +80,7 @@ export const githubReqHandler: InterceptNeeds<Interfaces> = [
       }
     },
     errHandler: delStoreTokenConfig,
-    urls: [
-      config.getUserInfo,
-      config.addArticleReaction,
-      config.delArticleReaction
-    ]
+    urls: handlerUrls[0]
   },
   // 需要添加baseOR的链接
   {
@@ -72,44 +89,10 @@ export const githubReqHandler: InterceptNeeds<Interfaces> = [
         params: baseOR
       }
     },
-    urls: [
-      config.postComment,
-      config.getArticleReactions,
-      config.addArticleReaction,
-      config.delArticleReaction
-    ]
+    urls: handlerUrls[1]
   }
-]
+] 
 
-const testURL = [
-  config.getUserInfo,
-  config.addArticleReaction,
-  config.delArticleReaction
-] as [
-  typeof config.getUserInfo,
-  typeof config.addArticleReaction,
-  typeof config.delArticleReaction,
-]
-let test: InterceptNeed<Interfaces, typeof testURL> = {
-  reqHandler() {
-    const tokenConfig = getStoreTokenConfig()
-    if (tokenConfig) {
-      return {
-        headers: {Authorization: ''},
-        data: {content: '+1'}
-        // headers: { 
-        //   Authorization: `token ${tokenConfig.token}`
-        // }
-      }
-    }
-  },
-  errHandler: delStoreTokenConfig,
-  urls: [
-    config.getUserInfo,
-    config.addArticleReaction,
-    config.delArticleReaction
-  ]
-}
 
 // 本地是否已授权
 export const isLocalAuth = () => {
@@ -121,14 +104,12 @@ export const isLocalAuth = () => {
 export const getAuthLink = () => {
   store.setItem(OriginKey, window.location.pathname)
 
-  
-
   return axios.getUri({
     url: config.authorize,
     params: {
       client_id: clientId,
       redirect_uri: redirectUri,
-      scope
+      scope,
     }
   })
 }
@@ -234,12 +215,3 @@ export const delArticleReaction = (issueId: number, reactionId: number) =>
       reactionId
     }
   })
-
-
-// type a = {
-//   'a': InstanceConfig<Interfaces, typeof config['delArticleReaction']>,
-//   'b': InstanceConfig<Interfaces, typeof config['addArticleReaction']>
-// }
-
-// let c:a[keyof a]
-// c.reqData.content = '+1'

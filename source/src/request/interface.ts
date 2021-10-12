@@ -93,7 +93,8 @@ export type Interfaces = {
       data: {
         content: ReactionContent
       },
-      response: Reaction
+      response: Reaction,
+      headers: { Authorization: string }
     },
   ],
   DELETE: [
@@ -102,10 +103,13 @@ export type Interfaces = {
       method: 'DELETE',
       params: {
         reactionId: number
-      }
+      },
+      headers: { Authorization: string }
     }
   ]
 }
+
+
 
 export type URL = ExtractInterfacesURL<Interfaces>
 export type MethodURL<Method  extends keyof Interfaces> = 
