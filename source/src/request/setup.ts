@@ -6,6 +6,8 @@ import axios, {
   AxiosResponse as BaseAxiosResponse
 } from 'axios'
 
+type defMethod = null
+
 // 接口配置值
 export type InterfaceConfig = {
   url: string,
@@ -14,72 +16,78 @@ export type InterfaceConfig = {
   response?: any
 }
 
+// 配置值
 export type InterfaceConfigArray = Array<InterfaceConfig>
 
 // 接口配置
-export type InterfacesConfig = {
-  [key in BaseMethod]?: InterfaceConfigArray
-}
+export type InterfacesConfig = { [key in BaseMethod]?: InterfaceConfigArray }
 
 // 提取所有Methods
-export type ExtractInterfacesMethod<Interfaces> = keyof Interfaces
+export type ExtractInterfacesMethod<T> = keyof T
 
 // 提取数组中的所有URL
-export type ExtractInterfaceArrayURL<
-  InterfaceArray extends InterfaceConfigArray
-> = InterfaceArray extends Array<{url: infer U}> ? U : never
-
-  // 提取接口所有url
-export type ExtractInterfacesAllURL<Interfaces> = {
-  [key in keyof Interfaces]: 
-    Interfaces[key] extends InterfaceConfigArray 
-      ? ExtractInterfaceArrayURL<Interfaces[key]>
-      : never
-}[keyof Interfaces]
+export type ExtractInterfaceArrayURL<T> = T extends Array<{url: infer U}> ? U : never
 
 // 提取接口某个method的所有url
 export type ExtractInterfacesMethodURL<
-  Interfaces, 
-  T extends ExtractInterfacesMethod<Interfaces>
-> = Interfaces[T] extends InterfaceConfigArray 
-      ? ExtractInterfaceArrayURL<Interfaces[T]>
+  T, 
+  M extends ExtractInterfacesMethod<T>
+> = T[M] extends InterfaceConfigArray 
+      ? ExtractInterfaceArrayURL<T[M]>
       : never
 
+// 提取接口所有url
+export type ExtractInterfacesAllURL<T> = {
+  [key in keyof T]: 
+    T[key] extends InterfaceConfigArray 
+      ? ExtractInterfaceArrayURL<T[key]>
+      : never
+}[keyof T]
+
 // 提取全部或者method的所有url
-export type ExtractInterfacesURL<
-  Interfaces,
-  Method
-> = Method extends ExtractInterfacesMethod<Interfaces> 
-  ? ExtractInterfacesMethodURL<Interfaces, Method>
-  : ExtractInterfacesAllURL<Interfaces>
+export type ExtractInterfacesURL<T, M = defMethod> = 
+  M extends defMethod
+    ? ExtractInterfacesAllURL<T>
+    : M extends ExtractInterfacesMethod<T> 
+      ? ExtractInterfacesMethodURL<T, M>
+      : never
+
+// 根据具体的method url 抽取有配置
+export type ExtractInterfaceByMethodURL<
+  T, 
+  M extends ExtractInterfacesMethod<T>, 
+  U extends ExtractInterfacesURL<T, M>
+> = {
+  [key in keyof T[M]]: 
+    T[M][key] extends InterfaceConfig
+      ? T[M][key]['url'] extends U 
+        ? T[M][key] & { method: M }
+        : never
+      : never
+}[keyof T[M]]
 
 // 根据URL提取完整接口参数
 export type ExtractInterface<
-  Interfaces extends InterfacesConfig, 
-  URL
-> = {
-  [Method in keyof Interfaces] : 
-    Method extends BaseMethod
-      ? URL extends ExtractInterfacesMethodURL<Interfaces, Method> 
-        ? {
-            [ iteratorkey in keyof Interfaces[Method] ]:
-              Interfaces[Method][iteratorkey] extends InterfaceConfig
-                ? Interfaces[Method][iteratorkey]['url'] extends URL
-                  ? Interfaces[Method][iteratorkey] & { method: Method }
-                  : never
-                : never
-          }[keyof Interfaces[Method]]
-        : never
+  T, 
+  U extends ExtractInterfacesURL<T, M>, 
+  M = defMethod
+> = 
+  M extends defMethod 
+    ? {
+        [Method in keyof T] : 
+          Method extends BaseMethod
+            ? U extends ExtractInterfacesURL<T, Method> 
+              ? ExtractInterfaceByMethodURL<T, Method, U>
+              : never
+            : never
+      }[keyof T]
+    : M extends ExtractInterfacesMethod<T>
+      ? ExtractInterfaceByMethodURL<T, M, U>
       : never
-}[keyof Interfaces]
 
 // 提取参数值
-export type ExtractConfigValue<
-  Config extends object, 
-  Attr extends string
-> = Config extends { [key in Attr]: any }
-      ? Config[Attr]
-      : never
+export type ExtractConfigValue<T, A extends string> = 
+  T extends { [key in A]: any } ? T[A] : never
 
 
 // 提取两对象得共有key和值
@@ -136,7 +144,7 @@ export type OmitUncertain<T> = OmitNever<{
 export type InstanceConfig<
   Interfaces extends InterfacesConfig,
   URL extends ExtractInterfacesURL<Interfaces, Method>,
-  Method = never,
+  Method = defMethod,
   Config extends InterfaceConfig = ExtractInterface<Interfaces, URL>,
   getUriConfig = Omit<Config, 'method' | 'response'>,
   reqConfig =  Omit<Config, 'response'>,
@@ -160,39 +168,36 @@ export interface AxiosInstance<
     ExtractInterfacesMethod<Interfaces>
 > {
   getUri<
-    URL extends ExtractInterfacesMethodURL<Interfaces, 'GET'>, 
-    instanceConfig extends InstanceConfig<Interfaces, URL, 'GET'> = InstanceConfig<Interfaces, URL>,
+    URL extends ExtractInterfacesURL<Interfaces, 'GET'>, 
+    instanceConfig extends InstanceConfig<Interfaces, URL, 'GET'> = InstanceConfig<Interfaces, URL, 'GET'>,
   >( config: ExtractConfigValue<instanceConfig, 'getUriConfig'> & { url: URL } ): string;
 
   request<
-    URL extends 
-      Method extends InterfaceMethod 
-        ? ExtractInterfacesMethodURL<Interfaces, Method> 
-        : InterfaceURL, 
-    Method extends InterfaceURL, 
-    instanceConfig extends InstanceConfig<Interfaces, URL> = InstanceConfig<Interfaces, URL>
+    URL extends ExtractInterfacesURL<Interfaces, Method>,
+    Method extends InterfaceMethod, 
+    instanceConfig extends InstanceConfig<Interfaces, URL, Method> = InstanceConfig<Interfaces, URL, Method>
   >( config: ExtractConfigValue<instanceConfig, 'reqConfig'> & { url: URL } ): instanceConfig['resData'];
 
   get<
-    URL extends ExtractInterfacesMethodURL<Interfaces, 'GET'>,
-    instanceConfig extends InstanceConfig<Interfaces, URL> = InstanceConfig<Interfaces, URL>
+    URL extends ExtractInterfacesURL<Interfaces, 'GET'>,
+    instanceConfig extends InstanceConfig<Interfaces, URL, 'GET'> = InstanceConfig<Interfaces, URL, 'GET'>
   >( url: URL, config?: ExtractConfigValue<instanceConfig, 'givenReqConfig'> ): instanceConfig['resData'];
   delete<
-    URL extends ExtractInterfacesMethodURL<Interfaces, 'DELETE'>,
-    instanceConfig extends InstanceConfig<Interfaces, URL> = InstanceConfig<Interfaces, URL>
+    URL extends ExtractInterfacesURL<Interfaces, 'DELETE'>,
+    instanceConfig extends InstanceConfig<Interfaces, URL, 'DELETE'> = InstanceConfig<Interfaces, URL, 'DELETE'>
   >( url: URL, config?: ExtractConfigValue<instanceConfig, 'givenReqConfig'> ): instanceConfig['resData'];
   head<
-    URL extends ExtractInterfacesMethodURL<Interfaces, 'HEAD'>,
-    instanceConfig extends InstanceConfig<Interfaces, URL> = InstanceConfig<Interfaces, URL>
+    URL extends ExtractInterfacesURL<Interfaces, 'HEAD'>,
+    instanceConfig extends InstanceConfig<Interfaces, URL, 'HEAD'> = InstanceConfig<Interfaces, URL, 'HEAD'>
   >( url: URL, config?: ExtractConfigValue<instanceConfig, 'givenReqConfig'> ): instanceConfig['resData'];
   options<
-    URL extends ExtractInterfacesMethodURL<Interfaces, 'OPTIONS'>,
-    instanceConfig extends InstanceConfig<Interfaces, URL> = InstanceConfig<Interfaces, URL>
+    URL extends ExtractInterfacesURL<Interfaces, 'OPTIONS'>,
+    instanceConfig extends InstanceConfig<Interfaces, URL, 'OPTIONS'> = InstanceConfig<Interfaces, URL, 'OPTIONS'>
   >(url: URL, config?: ExtractConfigValue<instanceConfig, 'givenReqConfig'>): instanceConfig['resData'];
   post<
-    URL extends ExtractInterfacesMethodURL<Interfaces, 'POST'>,
+    URL extends ExtractInterfacesURL<Interfaces, 'POST'>,
     reqData extends ExtractConfigValue<instanceConfig, 'reqData'> | undefined,
-    instanceConfig extends InstanceConfig<Interfaces, URL> = InstanceConfig<Interfaces, URL>,
+    instanceConfig extends InstanceConfig<Interfaces, URL, 'POST'> = InstanceConfig<Interfaces, URL, 'POST'>,
     reqConfig = reqData extends ExtractConfigValue<instanceConfig, 'reqData'>
       ? Omit<ExtractConfigValue<instanceConfig, 'givenReqConfig'>, 'data'> 
       : ExtractConfigValue<instanceConfig, 'givenReqConfig'> 
@@ -202,9 +207,9 @@ export interface AxiosInstance<
     config?: reqConfig
   ): instanceConfig['resData'];
   put<
-    URL extends ExtractInterfacesMethodURL<Interfaces, 'PUT'>,
+    URL extends ExtractInterfacesURL<Interfaces, 'PUT'>,
     reqData extends ExtractConfigValue<instanceConfig, 'reqData'> | undefined,
-    instanceConfig extends InstanceConfig<Interfaces, URL> = InstanceConfig<Interfaces, URL>,
+    instanceConfig extends InstanceConfig<Interfaces, URL, 'PUT'> = InstanceConfig<Interfaces, URL, 'PUT'>,
     reqConfig = reqData extends ExtractConfigValue<instanceConfig, 'reqData'> 
       ? Omit<ExtractConfigValue<instanceConfig, 'givenReqConfig'>, 'data'> 
       : ExtractConfigValue<instanceConfig, 'givenReqConfig'>
@@ -214,9 +219,9 @@ export interface AxiosInstance<
     config?: reqConfig
   ): instanceConfig['resData'];
   patch<
-    URL extends ExtractInterfacesMethodURL<Interfaces, 'PATCH'>,
+    URL extends ExtractInterfacesURL<Interfaces, 'PATCH'>,
     reqData extends ExtractConfigValue<instanceConfig, 'reqData'> | undefined,
-    instanceConfig extends InstanceConfig<Interfaces, URL> = InstanceConfig<Interfaces, URL>,
+    instanceConfig extends InstanceConfig<Interfaces, URL, 'PATCH'> = InstanceConfig<Interfaces, URL, 'PATCH'>,
     reqConfig = reqData extends ExtractConfigValue<instanceConfig, 'reqData'>
       ? Omit<ExtractConfigValue<instanceConfig, 'givenReqConfig'>, 'data'> 
       : ExtractConfigValue<instanceConfig, 'givenReqConfig'>
@@ -235,8 +240,8 @@ export type ExtractInstanceConfig<
   URL extends string,
   Method = any
 > = Method extends ExtractInterfacesMethod<Interfaces>
-      ? URL extends ExtractInterfacesMethodURL<Interfaces, Method>
-        ? InstanceConfig<Interfaces, URL>
+      ? URL extends ExtractInterfacesURL<Interfaces, Method>
+        ? InstanceConfig<Interfaces, URL, Method>
         : never
       : URL extends ExtractInterfacesAllURL<Interfaces>
         ? InstanceConfig<Interfaces, URL>
