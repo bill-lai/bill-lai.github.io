@@ -24,16 +24,13 @@ export type InterfacesConfig = {
 // 提取所有Methods
 export type ExtractInterfacesMethod<Interfaces> = keyof Interfaces
 
-
 // 提取数组中的所有URL
 export type ExtractInterfaceArrayURL<
   InterfaceArray extends InterfaceConfigArray
 > = InterfaceArray extends Array<{url: infer U}> ? U : never
 
   // 提取接口所有url
-export type ExtractInterfacesURL<
-  Interfaces extends InterfacesConfig
-> = {
+export type ExtractInterfacesAllURL<Interfaces> = {
   [key in keyof Interfaces]: 
     Interfaces[key] extends InterfaceConfigArray 
       ? ExtractInterfaceArrayURL<Interfaces[key]>
@@ -42,12 +39,19 @@ export type ExtractInterfacesURL<
 
 // 提取接口某个method的所有url
 export type ExtractInterfacesMethodURL<
-  Interfaces extends InterfacesConfig, 
+  Interfaces, 
   T extends ExtractInterfacesMethod<Interfaces>
 > = Interfaces[T] extends InterfaceConfigArray 
       ? ExtractInterfaceArrayURL<Interfaces[T]>
       : never
 
+// 提取全部或者method的所有url
+export type ExtractInterfacesURL<
+  Interfaces,
+  Method
+> = Method extends ExtractInterfacesMethod<Interfaces> 
+  ? ExtractInterfacesMethodURL<Interfaces, Method>
+  : ExtractInterfacesAllURL<Interfaces>
 
 // 根据URL提取完整接口参数
 export type ExtractInterface<
@@ -78,6 +82,40 @@ export type ExtractConfigValue<
       : never
 
 
+// 提取两对象得共有key和值
+type ExtractPublicAttr<T, R> = OmitNever<{
+  [key in keyof T & keyof R]: 
+    T[key] extends object
+      ? R[key] extends object
+        ? {} extends ExtractPublicAttr<T[key], R[key]>
+          ? never 
+          : ExtractPublicAttr<T[key], R[key]>
+        : never
+      : T[key] extends R[key]
+        ? R[key] extends T[key]
+          ? T[key]
+          : never
+        : never
+}>
+
+// 提取一个对象得所有共有参数
+type ExtractShare<T, R extends keyof T = keyof T> = {
+  [K in R]: { [CK in R]: ExtractPublicAttr<T[K], T[CK]> }[R]
+}[R]
+
+// 数组转obj
+type ArrayToObject<
+  URLS extends readonly any[],
+  keys extends string | number | symbol = keyof URLS
+> = OmitNever<{
+  [key in keys]: key extends keyof []
+    ? never
+    : key extends keyof URLS 
+      ? URLS[key]
+      : never
+}>
+
+
 export type AxiosResData<Config extends InterfaceConfig> = Promise<ExtractConfigValue<Config, 'response'>>
 export type ReqConfig<Config extends InterfaceConfig> = Omit<Config, 'response'>
 export type GivenReqConfig<Config extends InterfaceConfig> = Omit<ReqConfig<Config>, 'method' | 'url'>
@@ -97,7 +135,8 @@ export type OmitUncertain<T> = OmitNever<{
 
 export type InstanceConfig<
   Interfaces extends InterfacesConfig,
-  URL extends ExtractInterfacesURL<Interfaces>,
+  URL extends ExtractInterfacesURL<Interfaces, Method>,
+  Method = never,
   Config extends InterfaceConfig = ExtractInterface<Interfaces, URL>,
   getUriConfig = Omit<Config, 'method' | 'response'>,
   reqConfig =  Omit<Config, 'response'>,
@@ -116,13 +155,13 @@ export type InstanceConfig<
 
 export interface AxiosInstance<
   Interfaces extends InterfacesConfig, 
-  InterfaceURL extends ExtractInterfacesURL<Interfaces>,
+  InterfaceURL extends ExtractInterfacesAllURL<Interfaces>,
   InterfaceMethod extends ExtractInterfacesMethod<Interfaces> = 
     ExtractInterfacesMethod<Interfaces>
 > {
   getUri<
     URL extends ExtractInterfacesMethodURL<Interfaces, 'GET'>, 
-    instanceConfig extends InstanceConfig<Interfaces, URL> = InstanceConfig<Interfaces, URL>,
+    instanceConfig extends InstanceConfig<Interfaces, URL, 'GET'> = InstanceConfig<Interfaces, URL>,
   >( config: ExtractConfigValue<instanceConfig, 'getUriConfig'> & { url: URL } ): string;
 
   request<
@@ -188,63 +227,71 @@ export interface AxiosInstance<
   ): instanceConfig['resData'];
 }
 
-type ExtractPublicAttr<T, R> = OmitNever<{
-  [key in keyof T & keyof R]: 
-    T[key] extends object
-      ? R[key] extends object
-        ? {} extends ExtractPublicAttr<T[key], R[key]>
-          ? never 
-          : ExtractPublicAttr<T[key], R[key]>
+// 拦截urls参数
+export type InterceptMURL<T> = readonly [string, ExtractInterfacesMethod<T>]
+export type InterceptURL<T> = InterceptMURL<T> | string
+export type ExtractInstanceConfig<
+  Interfaces extends InterfacesConfig,
+  URL extends string,
+  Method = any
+> = Method extends ExtractInterfacesMethod<Interfaces>
+      ? URL extends ExtractInterfacesMethodURL<Interfaces, Method>
+        ? InstanceConfig<Interfaces, URL>
         : never
-      : T[key] extends R[key]
-        ? R[key] extends T[key]
-          ? T[key]
-          : never
+      : URL extends ExtractInterfacesAllURL<Interfaces>
+        ? InstanceConfig<Interfaces, URL>
         : never
-}>
 
-type ExtractShare<T, R extends keyof T = keyof T> = {
-  [K in R]: { [CK in R]: ExtractPublicAttr<T[K], T[CK]> }[R]
-}[R]
-
-
-type assistArray<T = any> = Array<T>
+// 拦截对象声明
 export type InterceptNeed<
   Interfaces extends InterfacesConfig,
-  URLS extends readonly string[],
-  publicConfig = {
-    [Index in keyof URLS]: Index extends URLS[keyof URLS] ? 8 : 1
-      // Index extends keyof assistArray
-      //   ? 5
-      //   : URLS[Index] extends ExtractInterfacesURL<Interfaces>
-      //     ? InstanceConfig<Interfaces, URLS[Index]>
-      //     : 6
-  },
+  URLS extends readonly InterceptURL<Interfaces>[],
+  ObjURLS = ArrayToObject<URLS>,
+  publicConfig = ExtractShare<{
+    [Index in keyof ObjURLS]:
+      ObjURLS[Index] extends InterceptMURL<Interfaces>
+        ? ExtractInstanceConfig<Interfaces, ObjURLS[Index][0], ObjURLS[Index][1]>
+        : ObjURLS[Index] extends string 
+          ? ExtractInstanceConfig<Interfaces, ObjURLS[Index]>
+          : never
+  }>,
   reqConfig = publicConfig extends object 
-    ? ExtractConfigValue<publicConfig, 'config'> 
+    ? ExtractConfigValue<publicConfig, 'config'>
     : never
 > = {
-  reqHandler?: (config: publicConfig, t: ExtractShare<publicConfig>) => Partial<reqConfig> | void,
+  reqHandler?: (config: reqConfig) => reqConfig | void,
   errHandler?: (res?: BaseAxiosResponse) => void,
   resHandler?: (res: publicConfig extends { resData: any } ? publicConfig['resData'] : never) => any
   urls: URLS
 }
 
+// 拦截对象数组声明
 export type InterceptNeeds<
   Interfaces extends InterfacesConfig,
-  ArrayURLS extends readonly URL[],
-  URL extends readonly string[] = readonly string[]
+  ArrayURLS extends readonly (readonly string[])[]
 > = {
   [index in keyof ArrayURLS]: 
     ArrayURLS[index] extends readonly string[]
       ? InterceptNeed<Interfaces, ArrayURLS[index]>
-      : ArrayURLS[index]
+      : index extends keyof []
+        ? [][index]
+        : undefined
 }
 
+// type ExtractInterceptNeedsReqResult<
+//   Interfaces extends InterfacesConfig,
+//   ArrayURLS extends readonly (readonly string[])[],
+//   URL extends string,
+//   Intercepts = InterceptNeeds<Interfaces, ArrayURLS>
+// > = {
+//   {
+
+//   }
+// }
 
 export type AxiosStatic<
   Interfaces extends InterfacesConfig, 
-  URL extends ExtractInterfacesURL<Interfaces>
+  URL extends ExtractInterfacesAllURL<Interfaces>
 > = Omit<BaseAxiosStatic, keyof AxiosInstance<Interfaces, URL>> & AxiosInstance<Interfaces, URL>
 
 
@@ -252,24 +299,26 @@ export type AxiosStatic<
 let isSetup = false
 const setupAxios = <
   Interfaces extends InterfacesConfig, 
-  Intercepts extends InterceptNeeds<Interfaces, []>,
-  URL extends ExtractInterfacesURL<Interfaces> = ExtractInterfacesURL<Interfaces>,
+  NeedsArrayURLS extends readonly (readonly string[])[],
+  URL extends ExtractInterfacesAllURL<Interfaces> = ExtractInterfacesAllURL<Interfaces>,
   Axios = AxiosStatic<Interfaces, URL>
 >(
   urlMaps: { [key: string]: URL }, 
-  interceptNeeds: Intercepts
+  interceptNeeds: InterceptNeeds<Interfaces, NeedsArrayURLS>
 ) => {
+  type Intercept = InterceptNeed<Interfaces, NeedsArrayURLS[0]>
+
   if (isSetup) return axios as unknown as Axios
 
   const urls = Object.values(urlMaps)
 
   const tapIntercept = (
     url: string, 
-    handler: <index extends number>(config: Intercepts[index]) => void
+    handler: (need: Intercept) => void
   ) => {
     interceptNeeds.forEach((need, index) => {
       if (includesUrl(need.urls, url)) {
-        handler<typeof index>(need)
+        handler(need as unknown as Intercept)
       }
     })
   }

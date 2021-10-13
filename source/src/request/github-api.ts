@@ -1,6 +1,6 @@
-import { axios, InterceptNeeds, Interfaces, OmitNever, OmitUncertain, ExtractInterfacesURL } from './index'
+import { axios, InterceptNeeds, Interfaces } from './index'
 import * as config from './config'
-import { paramsToStr, strToParams } from 'src/util'
+import { strToParams } from 'src/util'
 import { ReactionContent } from './model'
 
 const clientId = 'dbac9f422a3f03c121f1'
@@ -44,7 +44,7 @@ export const setStoreTokenConfig = (config: SessionToken) =>
 export const delStoreTokenConfig = () =>
   store.removeItem(GetTokenKey)
 
-const handlerUrls = [
+export const handlerUrls = [
   [
     config.getUserInfo,
     config.addArticleReaction,
@@ -59,23 +59,16 @@ const handlerUrls = [
 ] as const
 
 
-let a: ExtractInterfacesURL<Interfaces>
-
 export const githubReqHandler: InterceptNeeds<Interfaces, typeof handlerUrls> = [
   // 需要token的接口处理
   {
-    reqHandler(config, a) {
-      config[0] === 8
-      // config.concat = 'asd'
-      // config.url
+    reqHandler(config) {
       const tokenConfig = getStoreTokenConfig()
       if (tokenConfig) {
-        
         return {
-          
-          // headers: { 
-          //   Authorization: `token ${tokenConfig.token}`
-          // }
+          headers: { 
+            Authorization: `token ${tokenConfig.token}`
+          }
         }
       }
     },
@@ -84,7 +77,7 @@ export const githubReqHandler: InterceptNeeds<Interfaces, typeof handlerUrls> = 
   },
   // 需要添加baseOR的链接
   {
-    reqHandler() {
+    reqHandler(config) {
       return {
         params: baseOR
       }

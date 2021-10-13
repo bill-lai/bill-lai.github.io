@@ -1,9 +1,11 @@
-import setup from './setup'
+import setup, { InterceptNeeds } from './setup'
 import * as urls from './config'
 import Interfaces from './interface'
-import { githubReqHandler } from './github-api'
+import { githubReqHandler, handlerUrls } from './github-api'
 
-export const axios = setup<Interfaces>(
+
+
+export const axios = setup<Interfaces, typeof handlerUrls>(
   urls,
   githubReqHandler
 )

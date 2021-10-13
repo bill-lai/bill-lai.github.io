@@ -72,7 +72,7 @@ export const gendUrl = (tempUrl: string, params: { [key: string]: any}) => {
   return url
 }
 
-export const includesUrl = (tempUrls: Array<string>, url: string) =>
+export const includesUrl = (tempUrls: Array<string> | readonly string[], url: string) =>
   tempUrls.some(tempUrl => equalUrl(tempUrl, url)) 
 
   
