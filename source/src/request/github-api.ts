@@ -1,4 +1,4 @@
-import { axios, InterceptNeeds, Interfaces } from './index'
+import { axios, Intercepts, Interfaces } from './index'
 import * as config from './config'
 import { strToParams } from 'src/util'
 import { ReactionContent } from './model'
@@ -59,15 +59,19 @@ export const handlerUrls = [
 ] as const
 
 
-export const githubReqHandler: InterceptNeeds<Interfaces, typeof handlerUrls> = [
+export const githubReqHandler: Intercepts<Interfaces, typeof handlerUrls> = [
   // 需要token的接口处理
   {
     reqHandler(config) {
+      config.headers.Authorization
       const tokenConfig = getStoreTokenConfig()
       if (tokenConfig) {
         return {
           headers: { 
             Authorization: `token ${tokenConfig.token}`
+          },
+          params: {
+            id: null
           }
         }
       }
@@ -172,11 +176,11 @@ export const addCommit = (body: AddCommitBody) => {
     body: body.content
   }
 
+
   return axios.post(
     config.postComment,
-    // data, 
-    undefined,
-    { params: baseOR, data }
+    data,
+    { params: baseOR }
   )
 }
 
