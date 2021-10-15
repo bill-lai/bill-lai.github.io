@@ -58,12 +58,119 @@ export const handlerUrls = [
   ] as const
 ] as const
 
+// 提取两对象得共有key和值
+type ExtractPublicOR<T, R> = {
+  [key in keyof T | keyof R]: 
+    key extends keyof T 
+      ? key extends keyof R 
+        ? T[key] extends object
+          ? R[key] extends object
+            ? {} extends ExtractPublicOR<T[key], R[key]>
+              ? T[key] | R[key] 
+              : ExtractPublicOR<T[key], R[key]>
+            : T[key] | R[key]
+          : T[key] extends R[key]
+            ? R[key] extends T[key]
+              ? T[key]
+              : T[key] | R[key]
+            : T[key] | R[key]
+        : T[key] | undefined
+      : key extends keyof R
+        ? R[key] | undefined
+        : never
+}
+
+// 排除基本类型
+type OmitBasic<T extends string | number | symbol, a extends T> = keyof {
+  [key in T as key extends a ? never: key]: any
+}
+
+type ExtractShareBase<T extends Array<any>, R, I extends keyof T> = ExtractPublicOR<R, T[I]>
+
+// 提取一个对象得所有共有参数
+type defNever = null
+type ExtractShare<
+  T extends Array<any>, 
+  C = defNever,
+  UNReadKeys = defNever,
+  R extends keyof T = OmitBasic<keyof T, keyof []>
+> = {
+  [K in R]: 
+    K extends '0' | 0
+      ? C extends defNever
+        ? ExtractShare<T, T[K], OmitBasic<R, K>>
+        : defNever
+      : UNReadKeys extends string
+          ? K extends UNReadKeys
+            ? 123
+            : UNReadKeys
+        : null
+      // : C extends defNever
+      //   ? defNever
+      //   : UNReadKeys extends never
+      //     ? C
+      //     : K extends UNReadKeys
+      //       ? UNReadKeys extends string | number
+      //         ? UNReadKeys
+      //         // ? ExtractShare<T, ExtractPublicOR<C, T[K]>, OmitBasic<UNReadKeys, K>>
+      //         : defNever
+      //       : defNever
+}
+
+
+type zz = ExtractShare<[a, b, c], defNever>
+
+let asd: zz
+asd[0].
+
+type a = {
+  ac: {
+    z:123
+  }
+}
+
+
+type b = {
+  rc: number
+  ac: {
+    vcc: 123
+  }
+}
+
+type c = {
+  pc: number
+  ac: number
+}
+
+type test = readonly[a, b, c]
+
+
+let asdz: zz
+
+
+
+
+
+type Grow<T, A extends Array<T>> = ((x: T, ...xs: A) => void) extends ((...a: infer X) => void) ? X : never;
+type GrowToSize<T, A extends Array<T>, N extends number> = { 0: A, 1: GrowToSize<T, Grow<T, A>, N> }[A['length'] extends N ? 0 : 1];
+
+export type FixedArray<T, N extends number> = GrowToSize<T, [], N>;
+
+
+let a: FixedArray<test, test['length']> = []
+
+type ExtractShare2<T extends any[], R extends Array<any> = []> = 
+  T['length'] extends R['length']
+    ? 0 extends keyof R 
+      ? R[0] 
+      : never
+    :
+
 
 export const githubReqHandler: InterceptsConfig<Interfaces, typeof handlerUrls> = [
   // 需要token的接口处理
   {
     reqHandler(config) {
-      config.headers.Authorization
       const tokenConfig = getStoreTokenConfig()
       if (tokenConfig) {
         return {

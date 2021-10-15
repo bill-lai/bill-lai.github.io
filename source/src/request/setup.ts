@@ -1,4 +1,4 @@
-import { equalUrl, gendUrl, includesUrl } from 'src/util'
+import { equalUrl, gendUrl } from 'src/util'
 import axios, {
   Method as BaseMethod,
   AxiosRequestConfig as BaseAxiosReqConfig,
@@ -229,7 +229,7 @@ export type ExtractInstanceConfig<T, U, M = defMethod> =
     : never
 
 // 拦截urls参数
-export type InterceptURL<T extends InterfacesConfig> = string
+export type InterceptURL<T extends InterfacesConfig> = string | readonly [string, ExtractInterfacesMethod<T>]
 export type InterceptURLS<T> = readonly InterceptURL<T>[]
 export type InterceptsURLS<T> = readonly InterceptURLS<T>[]
 
@@ -272,16 +272,18 @@ export type InterceptsConfig<
         : undefined
 }
 
+// 抽取共有配置
+export type ExtractPubIntercept<
+  T extends InterfacesConfig, 
+  R extends InterceptsConfig<T, InterceptsURLS<T>>
+> = InterceptAtom<T, R extends InterceptsConfig<T, infer P> ? P[number] : never> 
+
 export type AxiosStatic<T> = Omit<BaseAxiosStatic, keyof AxiosInstance<T>> & AxiosInstance<T>
 
 
 export const setupFactory = <T extends InterfacesConfig> () => {
   let isSetup = false
-  return <
-    R extends InterceptsConfig<T, InterceptsURLS<T>>,
-    URLS extends InterceptsURLS<T> = R extends InterceptsConfig<T, infer P> ? P : never
-  >( needs?: R ) => {
-    type Intercept = InterceptAtom<T, URLS[number]>
+  return <R extends InterceptsConfig<T, InterceptsURLS<T>>>( needs?: R ) => {
 
     if (isSetup) return axios as AxiosStatic<T>
 
@@ -289,7 +291,7 @@ export const setupFactory = <T extends InterfacesConfig> () => {
     const tapIntercept = (
       url: string, 
       method: BaseMethod | undefined,
-      handler: (need: Intercept) => void
+      handler: (need: ExtractPubIntercept<T, R>) => void
     ) => {
       if (needs) {
         for (let need of needs) {
@@ -298,7 +300,7 @@ export const setupFactory = <T extends InterfacesConfig> () => {
               ? equalUrl(temp, url)
               : equalUrl(temp[1], url) && method === temp[0]
           )
-          wise && handler(need)
+          wise && handler(need as any)
         }
       }
     }
