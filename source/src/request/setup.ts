@@ -230,11 +230,13 @@ export type ExtractInstanceConfig<T, U, M = defMethod> =
 
 // 拦截urls参数
 export type InterceptURL<T extends InterfacesConfig> = string
+export type InterceptURLS<T> = readonly InterceptURL<T>[]
+export type InterceptsURLS<T> = readonly InterceptURLS<T>[]
 
 // 获取多个URL共有的config
 export type ExtractInterceptShare<
   T, 
-  URLS extends readonly InterceptURL<T>[]
+  URLS extends InterceptURLS<T>
 > = ExtractShare<{
   [Index in keyof URLS]:
     URLS[Index] extends InterceptURL<T>
@@ -248,7 +250,7 @@ export type ExtractInterceptShare<
 // 拦截数组选项声明
 export type InterceptAtom<
   T extends InterfacesConfig, 
-  URLS extends readonly InterceptURL<T>[]
+  URLS extends InterceptURLS<T>
 > = {
   reqHandler?: (config: ExtractConfigValue<ExtractInterceptShare<T, URLS>, 'config'>) => 
     ExtractConfigValue<ExtractInterceptShare<T, URLS>, 'config'> | void,
@@ -260,10 +262,10 @@ export type InterceptAtom<
 // 拦截对象数组声明
 export type InterceptsConfig<
   T extends InterfacesConfig, 
-  R extends readonly (readonly InterceptURL<T>[])[]
+  R extends InterceptsURLS<T>
 > = {
   [index in keyof R]: 
-    R[index] extends readonly InterceptURL<T>[]
+    R[index] extends InterceptURLS<T>
       ? InterceptAtom<T, R[index]>
       : index extends keyof []
         ? [][index]
@@ -273,90 +275,94 @@ export type InterceptsConfig<
 export type AxiosStatic<T> = Omit<BaseAxiosStatic, keyof AxiosInstance<T>> & AxiosInstance<T>
 
 
-let isSetup = false
-const setupAxios = <
-  Interfaces extends InterfacesConfig, 
-  Intercepts extends InterceptsConfig<Interfaces, readonly (readonly InterceptURL<Interfaces>[])[]>
->( needs: Intercepts ) => {
-  type Intercept = any
-  // type Intercept = InterceptAtom<Interfaces, NeedsArrayURLS[number]>
+export const setupFactory = <T extends InterfacesConfig> () => {
+  let isSetup = false
+  return <
+    R extends InterceptsConfig<T, InterceptsURLS<T>>,
+    URLS extends InterceptsURLS<T> = R extends InterceptsConfig<T, infer P> ? P : never
+  >( needs?: R ) => {
+    type Intercept = InterceptAtom<T, URLS[number]>
 
-  if (isSetup) return axios as AxiosStatic<Interfaces>
+    if (isSetup) return axios as AxiosStatic<T>
 
-  // 拦截处理函数
-  const tapIntercept = (
-    url: string, 
-    method: BaseMethod | undefined,
-    handler: (need: Intercept) => void
-  ) => {
-    for (let need of needs) {
-      const wise = need.urls.some(temp => 
-        typeof temp === 'string'
-          ? equalUrl(temp, url)
-          : equalUrl(temp[1], url) && method === temp[0]
-      )
-      wise && handler(need)
-    }
-  }
-
-  const stopRequest = () => {
-    const source = axios.CancelToken.source()
-    source.cancel('Illegal request')
-  }
-
-  const errorHandler = (
-    res: BaseAxiosResponse, 
-    msg: string = '出了点小问题'
-  ) => {
-    if (res.config && res.config.url) {
-      tapIntercept( 
-        res.config.url, 
-        res.config.method,
-        ({errHandler}) => errHandler && errHandler()
-      )
-    }
-    return Promise.reject(res)
-  }
-
-  axios.interceptors.request.use(config => {
-    if (config.url) {
-      config.url = gendUrl(config.url, config.params)
-
-      let ret = { ...config } as any
-      try {
-        tapIntercept(ret.url, ret.method, ({reqHandler}) => {
-          let attach = reqHandler && reqHandler(ret)
-          if (attach) {
-            for (let key in attach) {
-              ret[key] = ret[key]
-                ? { ...ret[key], ...attach[key] }
-                : attach[key]
-            }
-          }
-        })
-      } catch {
-        stopRequest()
+    // 拦截处理函数
+    const tapIntercept = (
+      url: string, 
+      method: BaseMethod | undefined,
+      handler: (need: Intercept) => void
+    ) => {
+      if (needs) {
+        for (let need of needs) {
+          const wise = need.urls.some(temp => 
+            typeof temp === 'string'
+              ? equalUrl(temp, url)
+              : equalUrl(temp[1], url) && method === temp[0]
+          )
+          wise && handler(need)
+        }
       }
-      return ret
-    } else {
-      return config
     }
-  })
 
-  axios.interceptors.response.use(res => {
-    if (res.status < 200 || res.status >= 300) {
-      return errorHandler(res)
-    } else if (res.config.url) {
-      tapIntercept(res.config.url, res.config.method, ({resHandler}) => {
-        res.data = resHandler && resHandler(res.data)
-      })
-      return res.data
-    } else {
-      return res.data
+    const stopRequest = () => {
+      const source = axios.CancelToken.source()
+      source.cancel('Illegal request')
     }
-  }, errorHandler)
 
-  return axios as AxiosStatic<Interfaces>
+    const errorHandler = (
+      res: BaseAxiosResponse, 
+      msg: string = '出了点小问题'
+    ) => {
+      if (res.config && res.config.url) {
+        tapIntercept( 
+          res.config.url, 
+          res.config.method,
+          ({errHandler}) => errHandler && errHandler()
+        )
+      }
+      return Promise.reject(res)
+    }
+
+    axios.interceptors.request.use(config => {
+      if (config.url) {
+        config.url = gendUrl(config.url, config.params)
+
+        let ret = { ...config } as any
+        try {
+          tapIntercept(ret.url, ret.method, ({reqHandler}) => {
+            let attach = reqHandler && reqHandler(ret)
+            if (attach) {
+              for (let key in attach) {
+                ret[key] = ret[key]
+                  ? { ...ret[key], ...attach[key] }
+                  : attach[key]
+              }
+            }
+          })
+        } catch {
+          stopRequest()
+        }
+        return ret
+      } else {
+        return config
+      }
+    })
+
+    axios.interceptors.response.use(res => {
+      if (res.status < 200 || res.status >= 300) {
+        return errorHandler(res)
+      } else if (res.config.url) {
+        tapIntercept(res.config.url, res.config.method, ({resHandler}) => {
+          res.data = resHandler && resHandler(res.data)
+        })
+        return res.data
+      } else {
+        return res.data
+      }
+    }, errorHandler)
+
+    return axios as AxiosStatic<T>
+  }
+
 }
 
-export default setupAxios
+export default setupFactory

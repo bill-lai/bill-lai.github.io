@@ -1,4 +1,4 @@
-import { axios, Intercepts, Interfaces } from './index'
+import { axios, InterceptsConfig, Interfaces } from './index'
 import * as config from './config'
 import { strToParams } from 'src/util'
 import { ReactionContent } from './model'
@@ -59,7 +59,7 @@ export const handlerUrls = [
 ] as const
 
 
-export const githubReqHandler: Intercepts<Interfaces, typeof handlerUrls> = [
+export const githubReqHandler: InterceptsConfig<Interfaces, typeof handlerUrls> = [
   // 需要token的接口处理
   {
     reqHandler(config) {
@@ -192,8 +192,9 @@ export const getCommits = (id: number) => {
   }).catch(() => [])
 }
 
+
 export const getArticleReactions = (id: number) => 
-axios.get(config.getArticleReactions, {
+  axios.get(config.getArticleReactions, {
     params: { ...baseOR, id }
   })
 
