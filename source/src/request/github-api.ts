@@ -24,6 +24,10 @@ type SessionToken = {
   code: string
 }
 
+axios.get('https://api.github.com/user')
+  .then(res => {
+  })
+
 // 获取token配置
 export const getStoreTokenConfig = (): SessionToken | null => {
   const token = store.getItem(GetTokenKey)
@@ -60,10 +64,12 @@ export const handlerUrls = [
 ] as const
 
 
-export const githubReqHandler = [
+
+export const githubReqHandler: InterceptsConfig<Interfaces, typeof handlerUrls> = [
   // 需要token的接口处理
   {
     reqHandler(config) {
+      // config.headers.Authorization
       const tokenConfig = getStoreTokenConfig()
       if (tokenConfig) {
         return {
@@ -87,7 +93,7 @@ export const githubReqHandler = [
     },
     urls: handlerUrls[1]
   }
-] as const
+]
 
 
 // 本地是否已授权
@@ -114,7 +120,7 @@ export const getAuthLink = () => {
 export const auth = () => {
   window.location.href = getAuthLink()
 }
-axios.test.GET.
+
 
 // 获取用户信息
 export const getUserInfo = async (isAuth = false) => 
@@ -132,7 +138,6 @@ export const recoveryHist = () => {
     store.removeItem(OriginKey)
   }
 }
-
 
 // 获取token
 export const getToken = (code?: string) => {
@@ -174,7 +179,11 @@ export const addCommit = (body: AddCommitBody) => {
     labels: [...issuesLabel, body.id],
     body: body.content
   }
-
+  axios.post(
+    'postComment',
+    null, 
+    { data }
+  )
 
   return axios.post(
     config.postComment,

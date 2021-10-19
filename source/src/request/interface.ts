@@ -51,7 +51,7 @@ export type Interfaces = {
     {
       url: typeof getUserInfo,
       response: UserInfo,
-      headers: { Authorization: string }
+      headers: { Authorization: string, user: number }
     },
     {
       url: typeof authorize,

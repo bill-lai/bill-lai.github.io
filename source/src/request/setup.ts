@@ -62,7 +62,7 @@ export type ExtractInterfacesMethodURL<T, M> =
   M extends ExtractInterfacesMethod<T>
     ? T[M] extends InterfaceConfigArray 
       ? ExtractInterfaceArrayURL<T[M]>
-      : never
+      : T[M]
     : never
 
 // 提取接口所有url
@@ -133,12 +133,11 @@ type InstanceBaseArgs<
   Method, 
   URL, 
   instance = InstanceConfig<T, URL, Method>
-> = 
-  {} extends ExtractValue<instance, 'givenReqConfig'> 
-    ? []
-    : ExtractValue<instance, 'givenReqConfig'>  extends never
+> = {} extends ExtractValue<instance, 'givenReqConfig'> 
       ? []
-      : [ExtractValue<instance, 'givenReqConfig'>]
+      : ExtractValue<instance, 'givenReqConfig'>  extends never
+        ? []
+        : [ExtractValue<instance, 'givenReqConfig'>]
 
 // 特定请求返回返回值
 type InstanceBaseReturn<T, Method, URL> =
@@ -174,10 +173,9 @@ type GETURIM = 'GET' | 'DELETE' | 'HEAD' | 'OPTIONS'
 export interface AxiosInstance<T> {
   getUri<URL extends ExtractInterfacesURL<T, GETURIM>, >( 
     config: ExtractValue<
-        InstanceConfig<T, URL, GETURIM>, 
-        'getUriConfig'
-      > 
-      & { url: URL } 
+              InstanceConfig<T, URL, GETURIM>, 
+              'getUriConfig'
+            > & { url: URL } 
   ): string;
 
   request<
@@ -230,6 +228,12 @@ export interface AxiosInstance<T> {
     ReturnType<InstancePost<T, 'PATCH', URL>>
 }
 
+// 拦截urls参数
+export type InterceptURL<T> = string | 
+  readonly [string, ExtractInterfacesMethod<T>]
+export type InterceptURLS<T> = readonly InterceptURL<T>[]
+export type InterceptsURLS<T> = readonly InterceptURLS<T>[]
+
 // 抽取拦截参数的接口定义
 export type ExtractInstanceConfig<T, U, M = defMethod> = 
   M extends ExtractInterfacesMethod<T> | defMethod
@@ -238,17 +242,7 @@ export type ExtractInstanceConfig<T, U, M = defMethod> =
       : never
     : never
 
-// 拦截urls参数
-export type InterceptURL<T extends InterfacesConfig> = 
-  string | readonly [string, ExtractInterfacesMethod<T>]
-export type InterceptURLS<T> = readonly InterceptURL<T>[]
-export type InterceptsURLS<T> = readonly InterceptURLS<T>[]
-
-// 获取多个URL共有的config
-export type ExtractInterceptInstance<
-  T, 
-  URLS extends InterceptURLS<T>
-> = {
+type ExtractInterceptInstanceAuxiliary<T, URLS> = {
   [Index in keyof URLS]:
     URLS[Index] extends InterceptURL<T>
       ? URLS[Index] extends string
@@ -260,13 +254,15 @@ export type ExtractInterceptInstance<
           >
       : never
 }
+  
+// 获取多个URL共有的config
+export type ExtractInterceptInstance<T, URLS> = 
+  ExtractInterceptInstanceAuxiliary<T, URLS>
+
 
 // 拦截数组选项声明
-export type InterceptAtom<
-  T extends InterfacesConfig, 
-  URLS extends InterceptURLS<T>
-> = {
-  reqHandler?: (
+export type InterceptAtom<T, URLS> = {
+  reqHandler: (
     config: ExtractValue<
         ExtractInterceptInstance<T, URLS>[keyof URLS], 
         'config'
@@ -274,7 +270,7 @@ export type InterceptAtom<
   ) => Partial<ExtractValue<
         ExtractInterceptInstance<T, URLS>[keyof URLS], 
         'config'
-      >> | void,
+      >>,
   errHandler?: (res?: BaseAxiosResponse) => void,
   resHandler?: (
     res: ExtractValue<
@@ -282,14 +278,12 @@ export type InterceptAtom<
         'resData'
       >
   ) => any
-  urls: URLS
+  urls: URLS,
 }
 
+
 // 拦截对象数组声明
-export type InterceptsConfig<
-  T extends InterfacesConfig, 
-  R extends InterceptsURLS<T>
-> = {
+export type InterceptsConfig<T, R> = {
   [index in keyof R]: 
     R[index] extends InterceptURLS<T>
       ? InterceptAtom<T, R[index]>
@@ -298,99 +292,93 @@ export type InterceptsConfig<
         : undefined
 }
 
-// 抽取指定url或 method跟url的拦截器
-export type ExtractInterceptConfig<
-  T extends InterfacesConfig,
-  R extends InterceptsURLS<T>,
-  C extends InterceptsConfig<T, R>,
-  U extends InterceptURL<T>
-> = OmitNever<{
-  [key in keyof C]: 
-    C[key] extends ExtractPubIntercept<T, C>
-      ? U extends C[key]['urls'][number]
-        ? C[key]
-        : never
-      : never
-}>
-
 // 抽取共有配置
-export type ExtractPubIntercept<
-  T extends InterfacesConfig, 
-  R extends InterceptsConfig<T, InterceptsURLS<T>>
-> = InterceptAtom<
-    T, 
-    R extends InterceptsConfig<T, infer P> ? P[number] : never
-  > 
+export type ExtractPubIntercept<T, R> = InterceptAtom<
+  T, 
+  R extends InterceptsConfig<T, infer P> 
+    ? P extends InterceptsURLS<T>
+      ? P[number]
+      : never
+    : never
+> 
+
+
+type ExtractInterceptConfigAuxiliary<T, R, U> = {
+  [key in keyof R]: 
+    R[key] extends { urls: any }
+      ? R[key] extends InterceptAtom<T, R[key]['urls']>
+        ? U extends R[key]['urls'][number]
+          ? R[key]
+          : never
+        : never
+      :never
+}
+
+// 抽取指定url或 method跟url的拦截器配置
+export type ExtractInterceptConfig<T, R, U> = 
+  ExtractInterceptConfigAuxiliary<T, R, U>[
+    OmitBasic<
+      keyof ExtractInterceptConfigAuxiliary<T, R, U>,
+      keyof []
+    >
+  ]
+
+type OmitAppoint<T, R, K = never> = Omit<
+  T,
+  OmitBasic<keyof R, 'url' | 'method' | K>
+>
+
+type processInterfaceConfigAuxiliary<
+  T,
+  TI extends InterfaceConfig,
+  CI extends InterceptAtom<T, any[]>
+> = CI extends never
+  ? never
+  : ReturnType<CI['reqHandler']> extends defMethod
+    ? CI['resHandler'] extends (...args: any) => any
+      ? Omit<TI, 'response'> & { response: ReturnType<CI['resHandler']> }
+      : TI 
+    : CI['resHandler'] extends (...args: any) => any
+      ? OmitAppoint<TI, ReturnType<CI['reqHandler']>, 'response'> 
+          & { response: ReturnType<CI['reqHandler']> } 
+      : OmitAppoint<TI, ReturnType<CI['reqHandler']>>
+      
+// 指定记接口加入指定拦截函数加工
+export type ProcessInterfaceConfig<
+  T,
+  TI extends InterfaceConfig,
+  CI extends InterceptAtom<T, any[]>
+> = TI extends processInterfaceConfigAuxiliary<T, TI, CI> 
+      ? processInterfaceConfigAuxiliary<T, TI, CI>  
+      : TI
+
+// 将拦截函数的加工并入接口声明
+export type ProcessInterfacesConfig<T, R> = {
+  [M in keyof T]: Array<T[M][keyof T[M]]> & {
+    [I in keyof T[M]]: 
+       T[M][I] extends InterfaceConfig
+        ? ProcessInterfaceConfig<
+            T, 
+            T[M][I],  
+            ExtractInterceptConfig<T, R, T[M][I]['url']>
+          >
+        : T[M][I]
+  }
+}
+
 
 // 加工后axios对象
 export type AxiosStatic<T> = 
-  Omit<BaseAxiosStatic, keyof AxiosInstance<T>> & AxiosInstance<T>
-
-// 指定记接口加入指定拦截函数加工
-export type ProcessInterfaceConfig<
-  T extends InterfacesConfig,
-  R extends InterceptsURLS<T>,
-  C extends InterceptsConfig<T, R>,
-  TI extends InterfaceConfig,
-  CI extends ExtractPubIntercept<T, C>
-> = CI['reqHandler'] extends (...args: any) => any
-? ReturnType<CI['reqHandler']> extends defVoid
-  ? CI['resHandler'] extends (...args: any) => any
-    ? Exclude<TI, 'response'> & { response: ReturnType<CI['resHandler']> }
-    : TI
-  : CI['resHandler'] extends (...args: any) => any
-    ? Exclude<TI, keyof ReturnType<CI['reqHandler']> | 'response'>
-        & { response: ReturnType<CI['reqHandler']> }
-    : Exclude<TI, keyof ReturnType<CI['reqHandler']>>
-: CI['resHandler'] extends (...args: any) => any
-  ? Exclude<TI, 'response'> & { response: ReturnType<CI['resHandler']> }
-  : TI
-
-// 将拦截函数的加工并入接口声明
-export type ProcessInterfacesConfig<
-  T extends InterfacesConfig,
-  R extends InterceptsURLS<T>,
-  C extends InterceptsConfig<T, R>,
-> = R extends InterceptsURLS<T>
-  ? {
-    [M in keyof T]: {
-      [I in OmitBasic<keyof T[M], keyof []>]: 
-        T[M][I] extends InterfaceConfig
-          ? ExtractInterceptConfig<T, R, C, T[M][I]['url']> extends InterceptAtom<T, readonly [T[M][I]['url']]>[]
-            ? 123
-            // ? ProcessInterfaceConfig<
-            //     T, 
-            //     R, 
-            //     C, 
-            //     T[M][I],  
-            //     ExtractInterceptConfig<T, R, C, T[M][I]['url']>
-            //   >
-            : ExtractInterceptConfig<T, R, C, T[M][I]['url']>
-          : T[M][I]
-    }
-  }
-  : T
+Omit<BaseAxiosStatic, keyof AxiosInstance<T>> & AxiosInstance<T>
 
 export const setupFactory = <T extends InterfacesConfig> () => {
   let isSetup = false
 
-  return <
-    interceptsURLS extends InterceptsURLS<T>,
-    R extends InterceptsConfig<T, interceptsURLS>
-  >( needs?: R )  => {
-    type ProcessIntercepts = R extends never 
-      ? 123
-      : ProcessInterfacesConfig<
-        T, 
-        interceptsURLS, 
-        R
-      >
-
-    type processAxios = AxiosStatic<ProcessIntercepts> & {
-      test: ProcessIntercepts
-    }
+  return <R extends InterceptsConfig<T, InterceptsURLS<T>>>( needs: R )  => {
+    type processAxios = AxiosStatic<ProcessInterfacesConfig<T, R>>
 
     if (isSetup) return axios as processAxios
+
 
     // 拦截处理函数
     const tapIntercept = (
