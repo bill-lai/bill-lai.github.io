@@ -24,9 +24,7 @@ type SessionToken = {
   code: string
 }
 
-axios.get('https://api.github.com/user')
-  .then(res => {
-  })
+axios.test.GET.
 
 // 获取token配置
 export const getStoreTokenConfig = (): SessionToken | null => {

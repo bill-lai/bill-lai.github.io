@@ -267,10 +267,10 @@ export type InterceptAtom<T, URLS> = {
         ExtractInterceptInstance<T, URLS>[keyof URLS], 
         'config'
       >
-  ) => Partial<ExtractValue<
+  ) => ExtractValue<
         ExtractInterceptInstance<T, URLS>[keyof URLS], 
         'config'
-      >>,
+      >,
   errHandler?: (res?: BaseAxiosResponse) => void,
   resHandler?: (
     res: ExtractValue<
@@ -323,10 +323,45 @@ export type ExtractInterceptConfig<T, R, U> =
     >
   ]
 
-type OmitAppoint<T, R, K = never> = Omit<
-  T,
-  OmitBasic<keyof R, 'url' | 'method' | K>
->
+type a = { a: string, b: string }
+
+
+
+type PartialAttr<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+
+
+// type OmitAppoint<T, R, K extends string = never> = Omit<
+//   keyof R extends keyof T 
+//     ? PartialAttr<T, keyof R>
+//     : T,
+//   'url' | 'method' | K
+// >
+type c = keyof a & 'a'
+
+
+type OmitAppoint<T, R, K = never> = {
+  [key in keyof R & keyof T]: 
+    key extends 'url' | 'method' | K
+      ? T[key] | 1
+      : T[key] extends object
+        ? R[key] extends object
+          ? OmitAppoint<T[key], R[key]>  | 2
+          : R[key] | 3
+        : T[key] extends R[key]
+          ? never
+          : R[key] extends T[key]
+            ? never
+            : T[key] | 4
+}
+
+
+// PartialAttr<T, keyof T & OmitBasic<keyof R, 'url' | 'method' | K>>
+
+// Omit<
+  
+//   T,
+//   OmitBasic<keyof R, 'url' | 'method' | K>
+// >
 
 type processInterfaceConfigAuxiliary<
   T,
@@ -375,7 +410,9 @@ export const setupFactory = <T extends InterfacesConfig> () => {
   let isSetup = false
 
   return <R extends InterceptsConfig<T, InterceptsURLS<T>>>( needs: R )  => {
-    type processAxios = AxiosStatic<ProcessInterfacesConfig<T, R>>
+    type processAxios = AxiosStatic<ProcessInterfacesConfig<T, R>> & {
+      test: ProcessInterfacesConfig<T, R>
+    }
 
     if (isSetup) return axios as processAxios
 
