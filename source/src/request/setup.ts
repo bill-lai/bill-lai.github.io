@@ -28,7 +28,7 @@ export type OmitNever<T> = {
 export type defVoid = void | undefined | null
 
 // 接口配置值
-export type InterfaceConfig = {
+export type InterfaceConfig = BaseAxiosReqConfig & {
   url: string,
   paths?: BaseAxiosReqConfig['params'],
   params?: BaseAxiosReqConfig['params'],
@@ -123,7 +123,7 @@ export type InstanceConfig<
   givenReqConfig: Omit<Config, 'method' | 'url' | 'response'>,
   getUriConfig: Omit<Config, 'method' | 'response'>
   reqConfig: Omit<Config, 'response'>,
-  resData: BaseAxiosPromise<ExtractValue<Config, 'response'>>,
+  resData: Promise<ExtractValue<Config, 'response'>>,
   reqData: ExtractValue<Config, 'data'>
 }
 
@@ -168,6 +168,8 @@ type InstancePost<
           ] | [defVoid, ...Args]
 ) => InstanceBaseReturn<T, Method, URL>;
 
+
+
 // 各个实例上的api定义
 type GETURIM = 'GET' | 'DELETE' | 'HEAD' | 'OPTIONS'
 export interface AxiosInstance<T> {
@@ -184,10 +186,17 @@ export interface AxiosInstance<T> {
         : ExtractValue<InstanceConfig<T, URL, Method>, 'reqConfig'> 
           & { url: URL }
   ):  ExtractValue<InstanceConfig<T, URL, Method>, 'resData'>;
-
-  (url: string, config?: InterfaceConfig): AxiosPromise;
+  
+  <
+    URL extends ExtractInterfacesURL<T>,
+    Instance extends InstanceConfig<T, URL>
+  >(
+    url: URL, 
+    config: Omit<ExtractValue<Instance, 'reqConfig'>, 'url' >
+  ): ExtractValue<Instance, 'resData'> ;
   
   defaults: InterfaceConfig;
+
   interceptors: {
     request: BaseAxiosInterceptorManager<InterfaceConfig>;
     response: BaseAxiosInterceptorManager<BaseAxiosResponse>;
@@ -294,9 +303,9 @@ export type PartialAll<T> =
 
 // 拦截数组选项声明
 export type InterceptAtom<T, URLS> = {
-  reqHandler?: (
-    config: Omit<ExtractInterceptInstance<T, URLS, 'config'>, 'response'>, 
-  ) => PartialAll<ExtractInterceptInstance<T, URLS, 'config'>> | void,
+  reqHandler?: <R extends PartialAll<ExtractInterceptInstance<T, URLS, 'config'>>>(
+    config: Omit<ExtractInterceptInstance<T, URLS, 'config'>, 'response'>
+  ) => R ,
   errHandler?: (res?: BaseAxiosResponse) => void,
   resHandler?: (res: ExtractInterceptInstance<T, URLS, 'config'>['response']) => any
   urls: URLS,
@@ -358,7 +367,7 @@ export const setupFactory = <T extends InterfacesConfig> () => {
   processAxios.interceptors.request.use(config => {
     
     if (config.url) {
-      config.url = gendUrl(config.url, config.path)
+      config.url = gendUrl(config.url, config.paths)
 
       let ret = { ...config } as any
       try {

@@ -138,6 +138,7 @@ export const getToken = (code?: string) => {
       client_secret: clientSecret,
       code
     }).then((res) => {
+      
       const { access_token } = strToParams(res)
       if (access_token) {
         setStoreTokenConfig({code, token: access_token})
@@ -150,6 +151,7 @@ export const getToken = (code?: string) => {
     return Promise.resolve(null)
   }
 }
+
 
 type AddCommitBody = {
   id: string,
