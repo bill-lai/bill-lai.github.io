@@ -3,7 +3,9 @@ import axios, {
   Method as BaseMethod,
   AxiosRequestConfig as BaseAxiosReqConfig,
   AxiosStatic as BaseAxiosStatic,
-  AxiosResponse as BaseAxiosResponse
+  AxiosResponse as BaseAxiosResponse,
+  AxiosPromise as BaseAxiosPromise,
+  AxiosInterceptorManager as BaseAxiosInterceptorManager,
 } from 'axios'
 
 // 提取对象的值
@@ -17,20 +19,18 @@ export type OmitBasic<
   [key in T as key extends K ? never: key]: any
 }
 
-
 // 去除对象中值为never的keyValue
 export type OmitNever<T> = {
-  [P in keyof T as T[P] extends never ? never : P]: 
-    T[P] extends object ? OmitNever<T[P]> : P extends never ? P : T[P]
+  [key in keyof T as T[key] extends never ? never: key]: 
+    T[key] extends never ? never: T[key]
 }
 
-
-type defMethod = null
-type defVoid = void | undefined | null
+export type defVoid = void | undefined | null
 
 // 接口配置值
 export type InterfaceConfig = {
   url: string,
+  paths?: BaseAxiosReqConfig['params'],
   params?: BaseAxiosReqConfig['params'],
   data?: BaseAxiosReqConfig['data'],
   response?: any
@@ -74,8 +74,8 @@ export type ExtractInterfacesAllURL<T> = {
 }[keyof T]
 
 // 提取全部或者method的所有url
-export type ExtractInterfacesURL<T, M = defMethod> = 
-  M extends defMethod
+export type ExtractInterfacesURL<T, M = defVoid> = 
+  M extends defVoid
     ? ExtractInterfacesAllURL<T>
     : M extends ExtractInterfacesMethod<T> 
       ? ExtractInterfacesMethodURL<T, M>
@@ -96,8 +96,8 @@ export type ExtractInterfaceByMethodURL<
 }[keyof T[M]]
 
 // 根据URL提取完整接口参数
-export type ExtractInterface<T, U, M = defMethod> = 
-  M extends defMethod 
+export type ExtractInterface<T, U, M = defVoid> = 
+  M extends defVoid 
     ? {
         [Method in keyof T] : 
           Method extends ExtractInterfacesMethod<T>
@@ -116,14 +116,14 @@ export type ExtractInterface<T, U, M = defMethod> =
 export type InstanceConfig<
   T, 
   U, 
-  M = defMethod, 
+  M = defVoid, 
   Config = ExtractInterface<T, U, M>
 > = {
   config: ExtractInterface<T, U>,
   givenReqConfig: Omit<Config, 'method' | 'url' | 'response'>,
   getUriConfig: Omit<Config, 'method' | 'response'>
   reqConfig: Omit<Config, 'response'>,
-  resData: Promise<ExtractValue<Config, 'response'>>,
+  resData: BaseAxiosPromise<ExtractValue<Config, 'response'>>,
   reqData: ExtractValue<Config, 'data'>
 }
 
@@ -171,6 +171,29 @@ type InstancePost<
 // 各个实例上的api定义
 type GETURIM = 'GET' | 'DELETE' | 'HEAD' | 'OPTIONS'
 export interface AxiosInstance<T> {
+  <
+    URL extends ExtractInterfacesURL<T, Method>,
+    Method extends ExtractInterfacesMethod<T> | 
+      defVoid = defVoid
+  >(
+    config: ExtractValue<
+        InstanceConfig<T, URL, Method>, 
+        'reqConfig'
+      > extends never
+        ? { url: URL, method: Method }
+        : ExtractValue<InstanceConfig<T, URL, Method>, 'reqConfig'> 
+          & { url: URL }
+  ):  ExtractValue<InstanceConfig<T, URL, Method>, 'resData'>;
+
+  (url: string, config?: InterfaceConfig): AxiosPromise;
+  
+  defaults: InterfaceConfig;
+  interceptors: {
+    request: BaseAxiosInterceptorManager<InterfaceConfig>;
+    response: BaseAxiosInterceptorManager<BaseAxiosResponse>;
+  };
+
+
   getUri<URL extends ExtractInterfacesURL<T, GETURIM>, >( 
     config: ExtractValue<
               InstanceConfig<T, URL, GETURIM>, 
@@ -181,7 +204,7 @@ export interface AxiosInstance<T> {
   request<
     URL extends ExtractInterfacesURL<T, Method>,
     Method extends ExtractInterfacesMethod<T> | 
-      defMethod = defMethod
+      defVoid = defVoid
   >( 
     config: ExtractValue<
         InstanceConfig<T, URL, Method>, 
@@ -226,275 +249,152 @@ export interface AxiosInstance<T> {
     URL extends ExtractInterfacesURL<T, 'PATCH'>
   >(url: URL, ...args: Parameters<InstancePost<T, 'PATCH', URL>>): 
     ReturnType<InstancePost<T, 'PATCH', URL>>
+
+  addIntercept: <R extends InterceptURLS<T>> (intercept: InterceptAtom<T, R>) => void
+  removeIntercept: <R extends InterceptURLS<T>> (intercept: InterceptAtom<T, R>) => void
 }
 
 // 拦截urls参数
-export type InterceptURL<T> = string | 
-  readonly [string, ExtractInterfacesMethod<T>]
+export type InterceptURL<T, U = ExtractInterfacesAllURL<T>> = U | 
+  readonly [U, ExtractInterface<T, U>['method']]
 export type InterceptURLS<T> = readonly InterceptURL<T>[]
 export type InterceptsURLS<T> = readonly InterceptURLS<T>[]
 
 // 抽取拦截参数的接口定义
-export type ExtractInstanceConfig<T, U, M = defMethod> = 
-  M extends ExtractInterfacesMethod<T> | defMethod
+export type ExtractInstanceConfig<T, U, M = defVoid> = 
+  M extends ExtractInterfacesMethod<T> | defVoid
     ? U extends ExtractInterfacesURL<T, M>
       ? InstanceConfig<T, U, M>
       : never
     : never
-
-type ExtractInterceptInstanceAuxiliary<T, URLS> = {
-  [Index in keyof URLS]:
-    URLS[Index] extends InterceptURL<T>
-      ? URLS[Index] extends string
-        ? ExtractInstanceConfig<T, URLS[Index]>
-        : ExtractInstanceConfig<
-            T, 
-            URLS[Index][0], 
-            URLS[Index][1]
-          >
-      : never
-}
   
 // 获取多个URL共有的config
-export type ExtractInterceptInstance<T, URLS> = 
-  ExtractInterceptInstanceAuxiliary<T, URLS>
+export type ExtractInterceptInstance<T, URLS, Attr extends string> = 
+  ExtractValue<
+    OmitNever<{
+      [Index in keyof URLS]:
+        URLS[Index] extends InterceptURL<T>
+          ? URLS[Index] extends string
+            ? ExtractInstanceConfig<T, URLS[Index]>
+            : ExtractInstanceConfig<
+                T, 
+                URLS[Index][0], 
+                URLS[Index][1]
+              >
+          : never
+    }[keyof URLS]>,
+    Attr
+  >
 
+// 所有参数转为可选
+export type PartialAll<T> = 
+  T extends object
+    ? Partial<{ [key in keyof T]: PartialAll<T[key]> }>
+    : T
 
 // 拦截数组选项声明
 export type InterceptAtom<T, URLS> = {
-  reqHandler: (
-    config: ExtractValue<
-        ExtractInterceptInstance<T, URLS>[keyof URLS], 
-        'config'
-      >
-  ) => ExtractValue<
-        ExtractInterceptInstance<T, URLS>[keyof URLS], 
-        'config'
-      >,
+  reqHandler?: (
+    config: Omit<ExtractInterceptInstance<T, URLS, 'config'>, 'response'>, 
+  ) => PartialAll<ExtractInterceptInstance<T, URLS, 'config'>> | void,
   errHandler?: (res?: BaseAxiosResponse) => void,
-  resHandler?: (
-    res: ExtractValue<
-        ExtractInterceptInstance<T, URLS>[keyof URLS], 
-        'resData'
-      >
-  ) => any
+  resHandler?: (res: ExtractInterceptInstance<T, URLS, 'config'>['response']) => any
   urls: URLS,
 }
 
-
-// 拦截对象数组声明
-export type InterceptsConfig<T, R> = {
-  [index in keyof R]: 
-    R[index] extends InterceptURLS<T>
-      ? InterceptAtom<T, R[index]>
-      : index extends keyof []
-        ? [][index]
-        : undefined
-}
-
-// 抽取共有配置
-export type ExtractPubIntercept<T, R> = InterceptAtom<
-  T, 
-  R extends InterceptsConfig<T, infer P> 
-    ? P extends InterceptsURLS<T>
-      ? P[number]
-      : never
-    : never
-> 
-
-
-type ExtractInterceptConfigAuxiliary<T, R, U> = {
-  [key in keyof R]: 
-    R[key] extends { urls: any }
-      ? R[key] extends InterceptAtom<T, R[key]['urls']>
-        ? U extends R[key]['urls'][number]
-          ? R[key]
-          : never
-        : never
-      :never
-}
-
-// 抽取指定url或 method跟url的拦截器配置
-export type ExtractInterceptConfig<T, R, U> = 
-  ExtractInterceptConfigAuxiliary<T, R, U>[
-    OmitBasic<
-      keyof ExtractInterceptConfigAuxiliary<T, R, U>,
-      keyof []
-    >
-  ]
-
-type a = { a: string, b: string }
-
-
-
-type PartialAttr<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
-
-
-// type OmitAppoint<T, R, K extends string = never> = Omit<
-//   keyof R extends keyof T 
-//     ? PartialAttr<T, keyof R>
-//     : T,
-//   'url' | 'method' | K
-// >
-type c = keyof a & 'a'
-
-
-type OmitAppoint<T, R, K = never> = {
-  [key in keyof R & keyof T]: 
-    key extends 'url' | 'method' | K
-      ? T[key] | 1
-      : T[key] extends object
-        ? R[key] extends object
-          ? OmitAppoint<T[key], R[key]>  | 2
-          : R[key] | 3
-        : T[key] extends R[key]
-          ? never
-          : R[key] extends T[key]
-            ? never
-            : T[key] | 4
-}
-
-
-// PartialAttr<T, keyof T & OmitBasic<keyof R, 'url' | 'method' | K>>
-
-// Omit<
-  
-//   T,
-//   OmitBasic<keyof R, 'url' | 'method' | K>
-// >
-
-type processInterfaceConfigAuxiliary<
-  T,
-  TI extends InterfaceConfig,
-  CI extends InterceptAtom<T, any[]>
-> = CI extends never
-  ? never
-  : ReturnType<CI['reqHandler']> extends defMethod
-    ? CI['resHandler'] extends (...args: any) => any
-      ? Omit<TI, 'response'> & { response: ReturnType<CI['resHandler']> }
-      : TI 
-    : CI['resHandler'] extends (...args: any) => any
-      ? OmitAppoint<TI, ReturnType<CI['reqHandler']>, 'response'> 
-          & { response: ReturnType<CI['reqHandler']> } 
-      : OmitAppoint<TI, ReturnType<CI['reqHandler']>>
-      
-// 指定记接口加入指定拦截函数加工
-export type ProcessInterfaceConfig<
-  T,
-  TI extends InterfaceConfig,
-  CI extends InterceptAtom<T, any[]>
-> = TI extends processInterfaceConfigAuxiliary<T, TI, CI> 
-      ? processInterfaceConfigAuxiliary<T, TI, CI>  
-      : TI
-
-// 将拦截函数的加工并入接口声明
-export type ProcessInterfacesConfig<T, R> = {
-  [M in keyof T]: Array<T[M][keyof T[M]]> & {
-    [I in keyof T[M]]: 
-       T[M][I] extends InterfaceConfig
-        ? ProcessInterfaceConfig<
-            T, 
-            T[M][I],  
-            ExtractInterceptConfig<T, R, T[M][I]['url']>
-          >
-        : T[M][I]
-  }
-}
-
-
-// 加工后axios对象
-export type AxiosStatic<T> = 
-Omit<BaseAxiosStatic, keyof AxiosInstance<T>> & AxiosInstance<T>
-
 export const setupFactory = <T extends InterfacesConfig> () => {
-  let isSetup = false
+  type NeedAtom<R> = InterceptAtom<T, R>
+  type Needs = Array<NeedAtom<InterceptURLS<T>>>
 
-  return <R extends InterceptsConfig<T, InterceptsURLS<T>>>( needs: R )  => {
-    type processAxios = AxiosStatic<ProcessInterfacesConfig<T, R>> & {
-      test: ProcessInterfacesConfig<T, R>
-    }
+  const needs: Needs = []
 
-    if (isSetup) return axios as processAxios
-
-
-    // 拦截处理函数
-    const tapIntercept = (
-      url: string, 
-      method: BaseMethod | undefined,
-      handler: (need: ExtractPubIntercept<T, R>) => void
-    ) => {
-      if (needs) {
-        for (let need of needs) {
-          const wise = need.urls.some(temp => 
-            typeof temp === 'string'
-              ? equalUrl(temp, url)
-              : equalUrl(temp[1], url) && method === temp[0]
-          )
-          wise && handler(need as any)
-        }
+  const processAxios = {
+    ...axios,
+    addIntercept(intercept) {
+      needs.push(intercept)
+    },
+    removeIntercept(intercept) {
+      const index = needs.indexOf(intercept)
+      if (~index) {
+        needs.splice(index, 1)
       }
     }
+  } as Omit<BaseAxiosStatic, keyof AxiosInstance<T>> & AxiosInstance<T>
 
-    const stopRequest = () => {
-      const source = axios.CancelToken.source()
-      source.cancel('Illegal request')
-    }
-
-    const errorHandler = (
-      res: BaseAxiosResponse, 
-      msg: string = '出了点小问题'
-    ) => {
-      if (res.config && res.config.url) {
-        tapIntercept( 
-          res.config.url, 
-          res.config.method,
-          ({errHandler}) => errHandler && errHandler()
+  // 拦截处理函数
+  const tapIntercept = (
+    url: string, 
+    method: BaseMethod | undefined,
+    handler: (need: NeedAtom<any>) => void
+  ) => {
+    if (needs) {
+      for (let need of needs) {
+        const wise = need.urls.some(temp => 
+          typeof temp === 'string'
+            ? equalUrl(temp, url)
+            : equalUrl(temp[1], url) && method === temp[0]
         )
+        wise && handler(need)
       }
-      return Promise.reject(res)
     }
-
-    axios.interceptors.request.use(config => {
-      if (config.url) {
-        config.url = gendUrl(config.url, config.params)
-
-        let ret = { ...config } as any
-        try {
-          tapIntercept(ret.url, ret.method, ({reqHandler}) => {
-            let attach = reqHandler && reqHandler(ret)
-            if (attach) {
-              for (let key in attach) {
-                ret[key] = ret[key]
-                  ? { ...ret[key], ...attach[key] }
-                  : attach[key]
-              }
-            }
-          })
-        } catch {
-          stopRequest()
-        }
-        return ret
-      } else {
-        return config
-      }
-    })
-
-    axios.interceptors.response.use(res => {
-      if (res.status < 200 || res.status >= 300) {
-        return errorHandler(res)
-      } else if (res.config.url) {
-        tapIntercept(res.config.url, res.config.method, ({resHandler}) => {
-          res.data = resHandler && resHandler(res.data)
-        })
-        return res.data
-      } else {
-        return res.data
-      }
-    }, errorHandler)
-
-    return axios as processAxios
   }
 
+  const stopRequest = () => {
+    const source = processAxios.CancelToken.source()
+    source.cancel('Illegal request')
+  }
+
+  const errorHandler = (res: BaseAxiosResponse) => {
+    if (res.config && res.config.url) {
+      tapIntercept( 
+        res.config.url, 
+        res.config.method,
+        ({errHandler}) => errHandler && errHandler()
+      )
+    }
+    return Promise.reject(res)
+  }
+
+  processAxios.interceptors.request.use(config => {
+    
+    if (config.url) {
+      config.url = gendUrl(config.url, config.path)
+
+      let ret = { ...config } as any
+      try {
+        tapIntercept(ret.url, ret.method, ({reqHandler}) => {
+          let attach = reqHandler && reqHandler(ret)
+          if (attach) {
+            for (let key in attach) {
+              ret[key] = ret[key]
+                ? { ...ret[key], ...attach[key] }
+                : attach[key]
+            }
+          }
+        })
+      } catch {
+        stopRequest()
+      }
+      return ret
+    } else {
+      return config
+    }
+  })
+
+  processAxios.interceptors.response.use(res => {
+    if (res.status < 200 || res.status >= 300) {
+      return errorHandler(res)
+    } else if (res.config.url) {
+      tapIntercept(res.config.url, res.config.method, ({resHandler}) => {
+        res.data = resHandler && resHandler(res.data)
+      })
+      return res.data
+    } else {
+      return res.data
+    }
+  }, errorHandler)
+
+  return processAxios
 }
 
 export default setupFactory

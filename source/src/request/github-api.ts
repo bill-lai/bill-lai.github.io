@@ -1,8 +1,7 @@
-import { axios, InterceptsConfig, Interfaces } from './index'
+import { axios, Interfaces } from './index'
 import * as config from './config'
 import { strToParams } from 'src/util'
 import { ReactionContent } from './model'
-import { ExtractShareAND, ExtractShareOR } from './share'
 
 const clientId = 'dbac9f422a3f03c121f1'
 const clientSecret = '26a67f075778cac68d6d2fc7e4e5086519745009'
@@ -23,8 +22,6 @@ type SessionToken = {
   token: string,
   code: string
 }
-
-axios.test.GET.
 
 // 获取token配置
 export const getStoreTokenConfig = (): SessionToken | null => {
@@ -47,51 +44,39 @@ export const setStoreTokenConfig = (config: SessionToken) =>
 export const delStoreTokenConfig = () =>
   store.removeItem(GetTokenKey)
 
-export const handlerUrls = [
-  [
-    config.getUserInfo,
-    config.addArticleReaction,
-    config.delArticleReaction
-  ] as const,
-  [
-    config.postComment,
-    config.getArticleReactions,
-    config.addArticleReaction,
-    config.delArticleReaction
-  ] as const
-] as const
 
-
-
-export const githubReqHandler: InterceptsConfig<Interfaces, typeof handlerUrls> = [
-  // 需要token的接口处理
-  {
-    reqHandler(config) {
-      // config.headers.Authorization
-      const tokenConfig = getStoreTokenConfig()
-      if (tokenConfig) {
-        return {
-          headers: {
-            Authorization: tokenConfig.token
-          }
-        }
-      } else {
-        throw '123'
-      }
-    },
-    errHandler: delStoreTokenConfig,
-    urls: handlerUrls[0]
-  },
-  // 需要添加baseOR的链接
-  {
-    reqHandler(config) {
+axios.addIntercept({
+  reqHandler(config) {
+    const tokenConfig = getStoreTokenConfig()
+    if (tokenConfig) {
       return {
-        params: baseOR
+        headers: {
+          Authorization: tokenConfig.token,
+        }
       }
-    },
-    urls: handlerUrls[1]
-  }
-]
+    }
+  },
+  errHandler: delStoreTokenConfig,
+  urls: [
+    config.userInfo,
+    ['getArticle', 'GET']
+  ] as const
+})
+
+
+axios.addIntercept({
+  reqHandler(config) {
+    
+    return {
+      params: baseOR
+    }
+  },
+  urls: [
+    config.comment,
+    config.articleReactions,
+    config.articleReaction
+  ] as const
+})
 
 
 // 本地是否已授权
@@ -122,7 +107,7 @@ export const auth = () => {
 
 // 获取用户信息
 export const getUserInfo = async (isAuth = false) => 
-  axios.get(config.getUserInfo)
+  axios.get(config.userInfo)
     .catch(() => {
       isAuth && auth()
       return retunf
@@ -137,6 +122,7 @@ export const recoveryHist = () => {
   }
 }
 
+
 // 获取token
 export const getToken = (code?: string) => {
   const tokenConfig = getStoreTokenConfig()
@@ -147,7 +133,7 @@ export const getToken = (code?: string) => {
   } 
   
   if (code) {
-    return axios.post(config.getToken, {
+    return axios.post(config.token, {
       client_id: clientId,
       client_secret: clientSecret,
       code
@@ -165,7 +151,6 @@ export const getToken = (code?: string) => {
   }
 }
 
-
 type AddCommitBody = {
   id: string,
   title: string,
@@ -177,42 +162,37 @@ export const addCommit = (body: AddCommitBody) => {
     labels: [...issuesLabel, body.id],
     body: body.content
   }
-  axios.post(
-    'postComment',
-    null, 
-    { data }
-  )
 
   return axios.post(
-    config.postComment,
-    data,
-    { params: baseOR }
+    config.comment,
+    null,
+    { params: baseOR, data }
   )
 }
 
 // 获取评论列表
 export const getCommits = (id: number) => {
   console.log(id)
-  return axios.get(config.getComment, {
+  return axios.get(config.comment, {
     params: { ...baseOR, labels: '' }
   }).catch(() => [])
 }
 
 
 export const getArticleReactions = (id: number) => 
-  axios.get(config.getArticleReactions, {
+  axios.get(config.articleReactions, {
     params: { ...baseOR, id }
   })
 
 export const addArticleReaction = (issueId: number, content: ReactionContent) => {
-  return axios.post(config.addArticleReaction, 
+  return axios.post(config.articleReactions, 
     { content },
     { params: { ...baseOR, id: issueId } }
   )
 }
 
 export const delArticleReaction = (issueId: number, reactionId: number) =>
-  axios.delete(config.delArticleReaction, {
+  axios.delete(config.articleReaction, {
     params: {
       ...baseOR,
       id: issueId,

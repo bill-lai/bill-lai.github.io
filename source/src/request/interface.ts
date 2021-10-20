@@ -1,13 +1,11 @@
 import {
-  getArticle,
-  getColumnList,
-  getUserInfo,
-  getToken,
-  postComment,
-  getComment,
-  getArticleReactions,
-  addArticleReaction,
-  delArticleReaction,
+  article,
+  columns,
+  userInfo,
+  token,
+  comment,
+  articleReactions,
+  articleReaction,
   authorize
 } from './config'
 
@@ -21,15 +19,15 @@ import {
   ReactionContent
 } from './model'
 
-import {
-  ExtractInterfacesURL,
-  ExtractInterfacesMethodURL,
-} from './setup'
+
+type GitHubAuth = {
+  headers?: { Authorization?: string }
+}
 
 type GitHubBaseReq = {
-  params: {
-    owner: string,
-    repo: string,
+  params?: {
+    owner?: string,
+    repo?: string,
   }
 }
 
@@ -40,18 +38,17 @@ type GithubReactionBaseReq = GitHubBaseReq & {
 export type Interfaces = {
   GET: [
     {
-      url: typeof getArticle,
+      url: typeof article,
       params: { id: string },
       response: Article
     },
     {
-      url: typeof getColumnList,
+      url: typeof columns,
       response: ColumnList
     },
-    {
-      url: typeof getUserInfo,
-      response: UserInfo,
-      headers: { Authorization: string, user: number }
+    GitHubAuth & {
+      url: typeof userInfo,
+      response: UserInfo
     },
     {
       url: typeof authorize,
@@ -62,18 +59,18 @@ export type Interfaces = {
       }
     },
     GitHubBaseReq & {
-      url: typeof getComment,
+      url: typeof comment,
       params: { labels: string },
       response: CommentList
     },
     GithubReactionBaseReq & {
-      url: typeof getArticleReactions,
+      url: typeof articleReactions,
       response: Reactions
     },
   ],
   POST: [
     {
-      url: typeof getToken,
+      url: typeof token,
       data: {
         client_id: string,
         client_secret: string,
@@ -82,37 +79,28 @@ export type Interfaces = {
       response: string
     },
     GitHubBaseReq & {
-      url: typeof postComment,
+      url: typeof comment,
       data: {
         body: string,
         labels: Array<string>
       }
     },
-    GithubReactionBaseReq & {
-      url: typeof addArticleReaction,
+    GitHubAuth & GithubReactionBaseReq & {
+      url: typeof articleReactions,
       data: {
         content: ReactionContent
       },
-      response: Reaction,
-      headers: { Authorization: string }
+      response: Reaction
     },
   ],
   DELETE: [
-    GithubReactionBaseReq & {
-      url: typeof delArticleReaction,
-      method: 'DELETE',
+    GitHubAuth & GithubReactionBaseReq & {
+      url: typeof articleReaction,
       params: {
         reactionId: number
-      },
-      headers: { Authorization: string }
+      }
     }
   ]
 }
 
-
-
-export type URL = ExtractInterfacesURL<Interfaces>
-export type MethodURL<Method  extends keyof Interfaces> = 
-  ExtractInterfacesMethodURL<Interfaces, Method>
-  
 export default Interfaces
