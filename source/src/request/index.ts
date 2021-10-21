@@ -7,7 +7,11 @@ import {
   ExtractInterface
 } from './setup'
 import * as urls from './config'
-import Interfaces from './interface'
+import { Interfaces } from './interface'
+import {
+  authIntercept,
+  basePathIntercept
+} from './github-api'
 
 
 // 所有method
@@ -28,6 +32,8 @@ export type Interface<
     
 
 export const axios = setupFactory<Interfaces>()
+  .addIntercept(authIntercept)
+  .addIntercept(basePathIntercept)
 
 export * from './model'
 export * from './interface'

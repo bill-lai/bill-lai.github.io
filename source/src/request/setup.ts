@@ -119,7 +119,7 @@ export type InstanceConfig<
   M = defVoid, 
   Config = ExtractInterface<T, U, M>
 > = {
-  config: ExtractInterface<T, U>,
+  config: Config,
   givenReqConfig: Omit<Config, 'method' | 'url' | 'response'>,
   getUriConfig: Omit<Config, 'method' | 'response'>
   reqConfig: Omit<Config, 'response'>,
@@ -259,8 +259,12 @@ export interface AxiosInstance<T> {
   >(url: URL, ...args: Parameters<InstancePost<T, 'PATCH', URL>>): 
     ReturnType<InstancePost<T, 'PATCH', URL>>
 
-  addIntercept: <R extends InterceptURLS<T>> (intercept: InterceptAtom<T, R>) => void
-  removeIntercept: <R extends InterceptURLS<T>> (intercept: InterceptAtom<T, R>) => void
+  addIntercept: <R extends InterceptURLS<T>, RT, RS> (
+    intercept: InterceptAtom<T, R, RT, RS>
+  ) => AxiosStatic<
+    InterceptAfterInterfaces<T, R, Omit<RT, 'method' | 'url' | 'response'>, RS>,
+    typeof intercept['resHandler']
+  >
 }
 
 // 拦截urls参数
@@ -295,22 +299,109 @@ export type ExtractInterceptInstance<T, URLS, Attr extends string> =
     Attr
   >
 
-// 所有参数转为可选
-export type PartialAll<T> = 
-  T extends object
-    ? Partial<{ [key in keyof T]: PartialAll<T[key]> }>
-    : T
-
 // 拦截数组选项声明
-export type InterceptAtom<T, URLS> = {
-  reqHandler?: <R extends PartialAll<ExtractInterceptInstance<T, URLS, 'config'>>>(
+export type InterceptAtom<T, URLS, ReqReturn = any, ResReturn = any> = {
+  reqHandler?: (
     config: Omit<ExtractInterceptInstance<T, URLS, 'config'>, 'response'>
-  ) => R ,
+  ) => ReqReturn,
   errHandler?: (res?: BaseAxiosResponse) => void,
-  resHandler?: (res: ExtractInterceptInstance<T, URLS, 'config'>['response']) => any
+  resHandler?: (
+    res: ExtractInterceptInstance<T, URLS, 'resData'> extends Promise<infer P> ? P : any
+  ) => ResReturn
   urls: URLS,
 }
 
+// 去除所有相同属性
+type ExtractPublic<T, R> = OmitNever<{
+  [key in keyof T & keyof R]: 
+    T[key] extends object
+      ? T[key] extends R[key]
+        ? R[key] extends T[key]
+          ? never
+          : ExtractPublic<T[key], R[key]>
+        : R[key] extends object
+          ? ExtractPublic<T[key], R[key]>
+          : never
+      : never
+} & {
+  [key in OmitBasic<keyof T, keyof R>]: T[key]
+}>
+
+// 传入请求配置更新接口
+type UpdateInterfaceReq<
+  T extends InterfaceConfig,
+  NV
+> = OmitNever<{
+  [key in keyof T]: 
+    key extends keyof NV 
+      ? {} extends ExtractPublic<T[key], NV[key]>
+        ? never
+        : ExtractPublic<T[key], NV[key]>
+      : T[key]
+}>
+
+// 传入请求响应配置更新接口
+type UpdateInterface<
+  T extends InterfaceConfig,
+  NV
+> = 'response' extends keyof NV
+  ? Omit<UpdateInterfaceReq<T, NV>, 'response'> & { response: NV['response'] }
+  : UpdateInterfaceReq<T, NV>
+
+// 传入函数配置，更新所有接口
+type UpdaeInterfaces<
+  T extends InterfacesConfig, 
+  US extends InterceptURLS<T>, 
+  NV
+> = {
+  [M in keyof T]: {
+    [I in OmitBasic<keyof T[M], keyof []>]: 
+        T[M][I] extends InterfaceConfig
+          ? T[M][I]['url'] extends US[keyof US]
+            ? UpdateInterface<T[M][I], NV>
+            : readonly [T[M][I]['url'], M] extends US[OmitBasic<keyof US, keyof []>]
+              ? UpdateInterface<T[M][I], NV>
+              : T[M][I]
+        : T[M][I]
+  } & {
+    [key in keyof T[M] & keyof []]: T[M][key]
+  }
+}
+
+// 通过拦截函数得resHandler和reqHandler更新所有接口
+type InterceptAfterInterfaces<
+  T extends InterfacesConfig, 
+  US extends InterceptURLS<T>, 
+  RET,
+  RES
+> = RET extends object | string | number | symbol 
+  ? RES extends object | string | number | symbol 
+    ? UpdaeInterfaces<T, US, RET & { response: RES }>
+    : UpdaeInterfaces<T, US, RET>
+  : RES extends object | string | number | symbol 
+    ? UpdaeInterfaces<T, US, { response: RES }>
+    : T
+
+// 加工后得axios声明
+export type AxiosStatic<T, resTranform = defVoid> = Omit<BaseAxiosStatic, keyof AxiosInstance<T>> 
+  & AxiosInstance<T>
+
+
+// 加工接口配置
+export type InterfacesResponseConfig<T extends InterfacesConfig> = {
+  [M in keyof T]: {
+    [I in OmitBasic<keyof T[M], keyof []>]: 
+      Omit<T[M][I], 'response'> 
+        & { response: BaseAxiosResponse<'response' extends keyof T[M][I] ? T[M][I]['response']: ''> }
+  } & {
+    [key in keyof T[M] & keyof []]: T[M][key]
+  }
+}
+
+// 加工res的axios
+export type SyntaxAxiosStatic<T> =  Omit<BaseAxiosStatic, keyof AxiosInstance<InterfacesResponseConfig<T>>> 
+  & AxiosInstance<InterfacesResponseConfig<T>>
+  
 export const setupFactory = <T extends InterfacesConfig> () => {
   type NeedAtom<R> = InterceptAtom<T, R>
   type Needs = Array<NeedAtom<InterceptURLS<T>>>
@@ -319,16 +410,11 @@ export const setupFactory = <T extends InterfacesConfig> () => {
 
   const processAxios = {
     ...axios,
-    addIntercept(intercept) {
+    addIntercept(intercept: any) {
       needs.push(intercept)
-    },
-    removeIntercept(intercept) {
-      const index = needs.indexOf(intercept)
-      if (~index) {
-        needs.splice(index, 1)
-      }
+      return processAxios as any;
     }
-  } as Omit<BaseAxiosStatic, keyof AxiosInstance<T>> & AxiosInstance<T>
+  } as any as SyntaxAxiosStatic<T>
 
   // 拦截处理函数
   const tapIntercept = (

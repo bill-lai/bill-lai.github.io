@@ -21,13 +21,13 @@ import {
 
 
 type GitHubAuth = {
-  headers?: { Authorization?: string }
+  headers: { Authorization: string }
 }
 
 type GitHubBaseReq = {
-  params?: {
-    owner?: string,
-    repo?: string,
+  params: {
+    owner: string,
+    repo: string,
   }
 }
 
@@ -60,7 +60,7 @@ export type Interfaces = {
     },
     GitHubBaseReq & {
       url: typeof comment,
-      params: { labels: string },
+      params: { labels?: string },
       response: CommentList
     },
     GithubReactionBaseReq & {
@@ -102,5 +102,6 @@ export type Interfaces = {
     }
   ]
 }
+
 
 export default Interfaces

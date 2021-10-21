@@ -1,7 +1,7 @@
-import { axios, Interfaces } from './index'
+import { axios } from './index'
 import * as config from './config'
 import { strToParams } from 'src/util'
-import { ReactionContent } from './model'
+
 
 const clientId = 'dbac9f422a3f03c121f1'
 const clientSecret = '26a67f075778cac68d6d2fc7e4e5086519745009'
@@ -45,30 +45,35 @@ export const delStoreTokenConfig = () =>
   store.removeItem(GetTokenKey)
 
 
-axios.addIntercept({
-  reqHandler(config) {
+// 认真信息管理
+export const authIntercept = {
+  reqHandler() {
     const tokenConfig = getStoreTokenConfig()
     if (tokenConfig) {
       return {
         headers: {
-          Authorization: tokenConfig.token,
-        }
+          Authorization: tokenConfig.token
+        },
       }
+    } else {
+      throw '未登录'
     }
   },
-  errHandler: delStoreTokenConfig,
   urls: [
     config.userInfo,
-    ['getArticle', 'GET']
+    [config.articleReactions, 'POST'],
+    [config.articleReaction, 'DELETE']
   ] as const
-})
+}
 
-
-axios.addIntercept({
-  reqHandler(config) {
-    
+// 基础路径管理
+export const basePathIntercept = {
+  reqHandler() {
     return {
-      params: baseOR
+      params: {
+        owner: `bill-lai`,
+        repo: `bill-lai.github.io`
+      }
     }
   },
   urls: [
@@ -76,7 +81,7 @@ axios.addIntercept({
     config.articleReactions,
     config.articleReaction
   ] as const
-})
+}
 
 
 // 本地是否已授权
@@ -122,7 +127,6 @@ export const recoveryHist = () => {
   }
 }
 
-
 // 获取token
 export const getToken = (code?: string) => {
   const tokenConfig = getStoreTokenConfig()
@@ -160,44 +164,11 @@ type AddCommitBody = {
 }
 // 添加评论
 export const addCommit = (body: AddCommitBody) => {
-  const data = {
-    labels: [...issuesLabel, body.id],
-    body: body.content
-  }
-
   return axios.post(
     config.comment,
-    null,
-    { params: baseOR, data }
-  )
-}
-
-// 获取评论列表
-export const getCommits = (id: number) => {
-  console.log(id)
-  return axios.get(config.comment, {
-    params: { ...baseOR, labels: '' }
-  }).catch(() => [])
-}
-
-
-export const getArticleReactions = (id: number) => 
-  axios.get(config.articleReactions, {
-    params: { ...baseOR, id }
-  })
-
-export const addArticleReaction = (issueId: number, content: ReactionContent) => {
-  return axios.post(config.articleReactions, 
-    { content },
-    { params: { ...baseOR, id: issueId } }
-  )
-}
-
-export const delArticleReaction = (issueId: number, reactionId: number) =>
-  axios.delete(config.articleReaction, {
-    params: {
-      ...baseOR,
-      id: issueId,
-      reactionId
+    {
+      labels: [...issuesLabel, body.id],
+      body: body.content
     }
-  })
+  )
+}

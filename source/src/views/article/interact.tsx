@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { githubApi, UserInfo, Article, Reactions, ReactionContent } from 'src/request'
+import { githubApi, UserInfo, Article, Reactions, ReactionContent, axios, config } from 'src/request'
 import { witchParentClass } from 'src/hoc'
 import style from './style.module.scss'
 import { useGlobalState } from 'src/state'
@@ -61,25 +61,18 @@ const Interact = witchParentClass((props: InteractProp) => {
   const [isAuth] = React.useState(githubApi.isLocalAuth())
   const [commits] = useGlobalState(
     `article/commits/${props.issues.number}`,
-    () => githubApi.getCommits(props.issues.number),
+    () => axios.get(config.comment, { params: { labels: '' } }),
     []
   )
   const [reactions, setReactions] = useGlobalState(
     `${props.issues.number}/reactions`,
-    () => githubApi.getArticleReactions(props.issues.number),
+    () => axios.get(config.articleReactions, { params: { id:props.issues.number } }) ,
     []
   )
 
-  // const genOnIncrement = (isArticle: boolean) => {
-  //   const delReaction = githubApi.delArticleReaction
-  //   const addReaction = githubApi.addArticleReaction
-
-
-  // }
-
   React.useEffect(() => {
     isAuth &&
-      githubApi.getUserInfo().then(setUserInfo)
+      axios.get(config.userInfo).then(setUserInfo)
   }, [isAuth])
 
   return (
@@ -89,17 +82,25 @@ const Interact = witchParentClass((props: InteractProp) => {
         onIncrement={
           (content, info) => {
             if (info) {
-              githubApi.delArticleReaction(props.issues.number, info.reactionId)
-                .then(() => {
-                  setReactions(
-                    reactions.filter(oReaction => oReaction.id !== info.reactionId)
-                  )
-                })
+              axios.delete(config.articleReaction, {
+                params: {
+                  id: props.issues.number,
+                  reactionId: info.reactionId
+                }
+              }).then(() => {
+                setReactions(
+                  reactions.filter(oReaction => oReaction.id !== info.reactionId)
+                )
+              })
             } else {
-              githubApi.addArticleReaction(props.issues.number, content)
-                .then(addReaction => {
-                  setReactions(reactions.concat(addReaction as any))
-                })
+              axios({
+                url: config.articleReactions,
+                method: 'POST',
+                params: { id: props.issues.number },
+                data: { content }
+              }).then(addReaction => {
+                setReactions(reactions.concat(addReaction as any))
+              })
             }
           }
         }
