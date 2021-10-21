@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { githubApi, UserInfo, Article, Reactions, ReactionContent, axios, config } from 'src/request'
+import { UserInfo, Article, Reactions, ReactionContent, axios, config } from 'src/request'
 import { witchParentClass } from 'src/hoc'
 import style from './style.module.scss'
 import { useGlobalState } from 'src/state'
@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom'
 import { queryRoutePath } from 'src/router'
 import { ReactionItems, ReactionItem, iconMaps, onIncrement } from './reactions'
 import { CommitInput, Commits } from './comment'
+import { isLocalAuth } from 'src/github'
 
 
 type ArticleReactionsProps = {
@@ -58,7 +59,7 @@ type InteractProp = {
 
 const Interact = witchParentClass((props: InteractProp) => {
   const [userInfo, setUserInfo] = React.useState<UserInfo | undefined>(undefined)
-  const [isAuth] = React.useState(githubApi.isLocalAuth())
+  const [isAuth] = React.useState(isLocalAuth())
   const [commits] = useGlobalState(
     `article/commits/${props.issues.number}`,
     () => axios.get(config.comment, { params: { labels: '' } }),

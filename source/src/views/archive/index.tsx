@@ -7,7 +7,7 @@ import app from 'src/platform'
 function Special() {
   const [columns] = useGlobalState(
     'columns', 
-    () => axios.get(config.getColumnList),
+    () => axios.get(config.columns),
     []
   )
   const title = `专题`

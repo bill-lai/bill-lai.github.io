@@ -44,46 +44,6 @@ export const setStoreTokenConfig = (config: SessionToken) =>
 export const delStoreTokenConfig = () =>
   store.removeItem(GetTokenKey)
 
-
-// 认真信息管理
-export const authIntercept = {
-  reqHandler() {
-    const tokenConfig = getStoreTokenConfig()
-    if (tokenConfig) {
-      return {
-        headers: {
-          Authorization: tokenConfig.token
-        },
-      }
-    } else {
-      throw '未登录'
-    }
-  },
-  urls: [
-    config.userInfo,
-    [config.articleReactions, 'POST'],
-    [config.articleReaction, 'DELETE']
-  ] as const
-}
-
-// 基础路径管理
-export const basePathIntercept = {
-  reqHandler() {
-    return {
-      params: {
-        owner: `bill-lai`,
-        repo: `bill-lai.github.io`
-      }
-    }
-  },
-  urls: [
-    config.comment,
-    config.articleReactions,
-    config.articleReaction
-  ] as const
-}
-
-
 // 本地是否已授权
 export const isLocalAuth = () => {
   const tokenConfig = getStoreTokenConfig()

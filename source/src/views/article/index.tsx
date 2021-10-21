@@ -49,7 +49,7 @@ const ArticleInfo = () => {
   const { id } = useParams() as { id: 'string' }
   const [ article ] = useGlobalState(
     `article/${id}`,
-    () => axios.get(config.getArticle, { params: { id } }),
+    () => axios.get(config.article, { paths: { id } }),
     article => {
       let html = ''
       let dirs: Navs<NavItem> = []

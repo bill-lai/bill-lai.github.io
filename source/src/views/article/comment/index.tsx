@@ -5,9 +5,9 @@ import { analysisMarked } from 'src/util'
 import { 
   UserInfo, 
   Comment as CommentType, 
-  CommentList,
-  githubApi 
+  CommentList
 } from 'src/request'
+import { getAuthLink } from 'src/github'
 
 export const CommitInput = witchParentClass(
   ({ userInfo }: { userInfo: UserInfo | void }) => 
@@ -16,7 +16,7 @@ export const CommitInput = witchParentClass(
           { userInfo.login }
         </div>)
       : (<div className={style.unauth}>
-          暂未授权登录，<a href={githubApi.getAuthLink()}>授权跟博主互动</a>
+          暂未授权登录，<a href={getAuthLink()}>授权跟博主互动</a>
         </div>)
 )
 

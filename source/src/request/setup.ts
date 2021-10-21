@@ -4,7 +4,6 @@ import axios, {
   AxiosRequestConfig as BaseAxiosReqConfig,
   AxiosStatic as BaseAxiosStatic,
   AxiosResponse as BaseAxiosResponse,
-  AxiosPromise as BaseAxiosPromise,
   AxiosInterceptorManager as BaseAxiosInterceptorManager,
 } from 'axios'
 
@@ -262,8 +261,7 @@ export interface AxiosInstance<T> {
   addIntercept: <R extends InterceptURLS<T>, RT, RS> (
     intercept: InterceptAtom<T, R, RT, RS>
   ) => AxiosStatic<
-    InterceptAfterInterfaces<T, R, Omit<RT, 'method' | 'url' | 'response'>, RS>,
-    typeof intercept['resHandler']
+    InterceptAfterInterfaces<T, R, Omit<RT, 'method' | 'url' | 'response'>, RS>
   >
 }
 
@@ -383,24 +381,9 @@ type InterceptAfterInterfaces<
     : T
 
 // 加工后得axios声明
-export type AxiosStatic<T, resTranform = defVoid> = Omit<BaseAxiosStatic, keyof AxiosInstance<T>> 
+export type AxiosStatic<T> = Omit<BaseAxiosStatic, keyof AxiosInstance<T>> 
   & AxiosInstance<T>
 
-
-// 加工接口配置
-export type InterfacesResponseConfig<T extends InterfacesConfig> = {
-  [M in keyof T]: {
-    [I in OmitBasic<keyof T[M], keyof []>]: 
-      Omit<T[M][I], 'response'> 
-        & { response: BaseAxiosResponse<'response' extends keyof T[M][I] ? T[M][I]['response']: ''> }
-  } & {
-    [key in keyof T[M] & keyof []]: T[M][key]
-  }
-}
-
-// 加工res的axios
-export type SyntaxAxiosStatic<T> =  Omit<BaseAxiosStatic, keyof AxiosInstance<InterfacesResponseConfig<T>>> 
-  & AxiosInstance<InterfacesResponseConfig<T>>
   
 export const setupFactory = <T extends InterfacesConfig> () => {
   type NeedAtom<R> = InterceptAtom<T, R>
@@ -414,7 +397,7 @@ export const setupFactory = <T extends InterfacesConfig> () => {
       needs.push(intercept)
       return processAxios as any;
     }
-  } as any as SyntaxAxiosStatic<T>
+  } as AxiosStatic<T>
 
   // 拦截处理函数
   const tapIntercept = (
@@ -451,8 +434,7 @@ export const setupFactory = <T extends InterfacesConfig> () => {
   }
 
   processAxios.interceptors.request.use(config => {
-    
-    if (config.url) {
+    if (config.url && config.paths) {
       config.url = gendUrl(config.url, config.paths)
 
       let ret = { ...config } as any
@@ -470,8 +452,10 @@ export const setupFactory = <T extends InterfacesConfig> () => {
       } catch {
         stopRequest()
       }
+      console.log(ret)
       return ret
     } else {
+      console.log('11')
       return config
     }
   })

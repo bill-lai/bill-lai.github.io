@@ -1,7 +1,7 @@
 import * as React from 'react'
 import style from './style.module.scss'
 import { strToParams } from 'src/util'
-import { githubApi } from 'src/request'
+import { recoveryHist, getToken } from 'src/github'
 
 enum Step {
   UN,
@@ -34,11 +34,9 @@ const Auth = () => {
     ]
 
     if (asyncSteps.includes(newStep)) {
-      setTimeout(() => {
-        githubApi.recoveryHist()
-      }, 2000)
+      setTimeout(() => recoveryHist(), 2000)
     } else if (steps.includes(newStep)) {
-      githubApi.recoveryHist()
+      recoveryHist()
     }
   }
 
@@ -46,7 +44,7 @@ const Auth = () => {
     const { code } = strToParams(window.location.search)
     if (code) {
       next(Step.AUTH_ALLOW)
-      githubApi.getToken(code)
+      getToken(code)
         .then(data => {
           if (data) {
             next(Step.TOKEN_SUCCESS)

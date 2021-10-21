@@ -32,7 +32,7 @@ const Home = () => {
 
   const [articles] = useGlobalState(
     'columns', 
-    () => axios.get(config.getColumnList),
+    () => axios.get(config.columns),
     columns => 
       columns.reduce(
         (t:Array<ArticleBase>, column) => t.concat(column.articles), 

@@ -39,7 +39,7 @@ export type Interfaces = {
   GET: [
     {
       url: typeof article,
-      params: { id: string },
+      paths: { id: string },
       response: Article
     },
     {
