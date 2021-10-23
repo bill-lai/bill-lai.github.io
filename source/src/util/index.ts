@@ -64,6 +64,7 @@ export const gendUrl = (tempUrl: string, params: { [key: string]: any}) => {
   let url = ''
   let preIndex = 0
   let m
+
   while ((m = place.exec(tempUrl))) {
     url += tempUrl.substring(preIndex,  m.index + 1) + (params[m[1]] || 'null')
     preIndex = m.index + m[0].length
@@ -97,3 +98,56 @@ export const paramsToStr = (params: { [key: string]: string }) =>
   '?' + Object.keys(params)
     .map(key => `${key}${params[key] == null ? '' : `=${params[key]}`}`)
     .join('&')
+
+
+export const objectToString = Object.prototype.toString
+export const toTypeString = (value: unknown): string =>
+  objectToString.call(value)
+
+export const toRawType = (value: unknown): string => {
+  // extract "RawType" from strings like "[object RawType]"
+  return toTypeString(value).slice(8, -1)
+}
+    
+
+// 递归复制
+export const recursionCopy = <T extends object, R extends object>(from: R, to: T): T & R => {
+  if (toRawType(from) !== toRawType(to)) {
+    return to as T & R
+  }
+
+  const toKeys = Object.keys(to)
+  const fromKeys = Object.keys(from)
+  const result = { ...from } as T & R
+
+  for (const toKey of toKeys) {
+    const toItem = (to as any)[toKey]
+
+    let i = 0;
+    for (; i < fromKeys.length; i++) {
+      const fromKey = fromKeys[i]
+      if (toKey === fromKey) {
+        const fromItem = (from as any)[fromKey]
+        const fromItemType = toRawType(fromItem)
+        const toItemType = toRawType(toItem)
+
+        if (fromItemType === toItemType 
+            && (fromItemType === 'Object' 
+              || fromItemType === 'Array')
+        ) {
+          (result as any)[fromKey] = recursionCopy(fromItem, toItem)
+        } else {
+          (result as any)[fromKey] = toItem
+        }
+
+        break;
+      }
+    }
+
+    if (i === fromKeys.length) {
+      (result as any)[toKey] = toItem
+    }
+  }
+
+  return result
+}

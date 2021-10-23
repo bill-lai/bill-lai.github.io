@@ -1,4 +1,4 @@
-import { equalUrl, gendUrl } from 'src/util'
+import { equalUrl, gendUrl, recursionCopy } from 'src/util'
 import axios, {
   Method as BaseMethod,
   AxiosRequestConfig as BaseAxiosReqConfig,
@@ -410,7 +410,7 @@ export const setupFactory = <T extends InterfacesConfig> () => {
         const wise = need.urls.some(temp => 
           typeof temp === 'string'
             ? equalUrl(temp, url)
-            : equalUrl(temp[1], url) && method === temp[0]
+            : equalUrl(temp[0], url) && method?.toUpperCase() === temp[1]
         )
         wise && handler(need)
       }
@@ -434,28 +434,24 @@ export const setupFactory = <T extends InterfacesConfig> () => {
   }
 
   processAxios.interceptors.request.use(config => {
-    if (config.url && config.paths) {
-      config.url = gendUrl(config.url, config.paths)
-
+    if (config.url) {
       let ret = { ...config } as any
       try {
         tapIntercept(ret.url, ret.method, ({reqHandler}) => {
           let attach = reqHandler && reqHandler(ret)
           if (attach) {
-            for (let key in attach) {
-              ret[key] = ret[key]
-                ? { ...ret[key], ...attach[key] }
-                : attach[key]
-            }
+            ret = recursionCopy(ret, attach)
           }
         })
       } catch {
         stopRequest()
       }
-      console.log(ret)
+
+      if (ret.paths) {
+        ret.url = gendUrl(ret.url, ret.paths)
+      }
       return ret
     } else {
-      console.log('11')
       return config
     }
   })
@@ -465,7 +461,9 @@ export const setupFactory = <T extends InterfacesConfig> () => {
       return errorHandler(res)
     } else if (res.config.url) {
       tapIntercept(res.config.url, res.config.method, ({resHandler}) => {
-        res.data = resHandler && resHandler(res.data)
+        if (resHandler) {
+          res.data = resHandler(res.data)
+        }
       })
       return res.data
     } else {

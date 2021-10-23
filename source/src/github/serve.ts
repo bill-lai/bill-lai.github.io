@@ -12,7 +12,8 @@ import {
   owner,
   redirectUri,
   repo,
-  scope
+  scope,
+  issuesLabel
 } from 'src/constant'
 
 
@@ -81,8 +82,8 @@ export const authIntercept = {
     } else {
       return {
         headers: {
-          Authorization: tokenConfig.token
-        },
+          Authorization: `token ${tokenConfig.token}`
+        }
       }
     }
   },
@@ -95,10 +96,27 @@ export const authIntercept = {
 
 // 路径拦截器
 export const pathIntercepet = {
-  reqHandler: () => ({ params: { owner, repo } }),
+  reqHandler: () => ({ paths: { owner, repo } }),
   urls: [
     config.comment,
     config.articleReactions,
     config.articleReaction
+  ] as const
+}
+
+export const commentIntercepet = {
+  reqHandler: (config: any) => {
+    if (config.method.toUpperCase() === 'GET') {
+      return {
+        params: {
+          labels: issuesLabel
+        }
+      }
+    } else if (config.method.toUpperCase() === 'POST') {
+      config.data.labels.push(issuesLabel)
+    }
+  },
+  urls: [
+    config.comment
   ] as const
 }

@@ -67,7 +67,7 @@ const Interact = witchParentClass((props: InteractProp) => {
   )
   const [reactions, setReactions] = useGlobalState(
     `${props.issues.number}/reactions`,
-    () => axios.get(config.articleReactions, { params: { id:props.issues.number } }) ,
+    () => axios.get(config.articleReactions, { paths: { id:props.issues.number } }) ,
     []
   )
 
@@ -84,7 +84,7 @@ const Interact = witchParentClass((props: InteractProp) => {
           (content, info) => {
             if (info) {
               axios.delete(config.articleReaction, {
-                params: {
+                paths: {
                   id: props.issues.number,
                   reactionId: info.reactionId
                 }
@@ -94,10 +94,10 @@ const Interact = witchParentClass((props: InteractProp) => {
                 )
               })
             } else {
-              axios({
+              axios.request({
                 url: config.articleReactions,
                 method: 'POST',
-                params: { id: props.issues.number },
+                paths: { id: props.issues.number },
                 data: { content }
               }).then(addReaction => {
                 setReactions(reactions.concat(addReaction as any))

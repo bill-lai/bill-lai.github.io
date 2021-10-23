@@ -8,7 +8,7 @@ import {
 } from './setup'
 import * as urls from './config'
 import { Interfaces } from './interface'
-import { authIntercept, pathIntercepet } from 'src/github'
+import { authIntercept, pathIntercepet, commentIntercepet } from 'src/github'
 
 
 // 所有method
@@ -37,5 +37,6 @@ export const config = urls
 export const axios = setupFactory<Interfaces>()
   .addIntercept(authIntercept)
   .addIntercept(pathIntercepet)
+  .addIntercept(commentIntercepet)
 
 export default axios

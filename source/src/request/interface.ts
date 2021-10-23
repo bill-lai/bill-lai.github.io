@@ -25,14 +25,14 @@ type GitHubAuth = {
 }
 
 type GitHubBaseReq = {
-  params: {
+  paths: {
     owner: string,
     repo: string,
   }
 }
 
 type GithubReactionBaseReq = GitHubBaseReq & {
-  params: { id: number }
+  paths: { id: number }
 }
 
 export type Interfaces = {
@@ -60,7 +60,7 @@ export type Interfaces = {
     },
     GitHubBaseReq & {
       url: typeof comment,
-      params: { labels?: string },
+      params: { labels: string },
       response: CommentList
     },
     GithubReactionBaseReq & {
@@ -96,7 +96,7 @@ export type Interfaces = {
   DELETE: [
     GitHubAuth & GithubReactionBaseReq & {
       url: typeof articleReaction,
-      params: {
+      paths: {
         reactionId: number
       }
     }
