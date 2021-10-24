@@ -1,12 +1,20 @@
 import * as React from "react"
 import { witchParentClass } from "src/hoc"
-import { Reactions, UserInfo, ReactionContent } from "src/request"
 import * as icons from './icons'
 import style from './style.module.scss'
+import { useGlobalState } from "src/state"
+import {
+  axios, 
+  Reactions, 
+  UserInfo, 
+  ReactionContent, 
+  config, 
+  Reaction 
+} from "src/request"
 
 type TReactionInfo = {
   userId: number,
-  reactionId: number
+  id: number
 }
 type TReaction = {
   [key in ReactionContent]: {
@@ -55,7 +63,7 @@ function transformReactions({
     if (userInfo && item.user.id === userInfo.id) {
       treaction[item.content].owner = {
         userId: userInfo.id,
-        reactionId: item.id
+        id: item.id
       }
     }
 
@@ -126,20 +134,61 @@ export const ReactionItems = witchParentClass(
   }
 )
 
-// type RequestUrls = typeof config
-// export const genReaction = (
-//   addApi: RequestUrls['addArticleReaction'], 
-//   delApi: RequestUrls['delArticleReaction'],
-//   getApi: RequestUrls['getArticleReactions'],
-//   namespace: string = addApi
-// ) => {
-//   return (req) => {
-//     const [reactions, setReactions] = useGlobalState(
-//       `${namespace}/${args.join('/')}/reactions`,
-//       () => getApi(...args)
-//       () => githubApi.getArticleReactions(props.issues.number)
-//         .then(data => data as Reactions),
-//       []
-//     )
-//   }
-// }
+type URL = typeof config
+export type ReactionOperProp = {
+  delApi?: URL['articleReaction'],
+  addApi?: URL['articleReactions'],
+  allApi: URL['articleReactions'],
+  paths: { id: number }
+  namespace: string
+}
+
+export type UpdateReaction = (content: ReactionContent, model?: TReactionInfo) => void
+
+export function ReactionServeFactory(
+  config: Required<ReactionOperProp>
+    | Omit<Required<ReactionOperProp>, 'addApi'>
+    | Omit<Required<ReactionOperProp>, 'delApi'>
+): [Reactions, UpdateReaction]
+export function ReactionServeFactory(
+  config: Omit<ReactionOperProp, 'delApi' | 'addApi'>
+): [Reactions]
+export function ReactionServeFactory({
+  delApi, 
+  allApi, 
+  addApi, 
+  paths,
+  namespace = allApi
+}: ReactionOperProp) {
+  const [reactions, setReactions] = useGlobalState(
+    namespace,
+    () => axios.get(allApi, { paths }),
+    []
+  )
+
+  const updateReaction: UpdateReaction = (content, model) => {
+    if (model && delApi) {
+      axios.delete(delApi, {
+        paths: {
+          ...paths,
+          reactionId: model.id
+        }
+      }).then(() => {
+        setReactions(
+          reactions.filter(oReaction => oReaction.id !== model.id)
+        )
+      })
+    } else if (!model && addApi) {
+      axios.request({
+        url: addApi,
+        method: 'POST',
+        paths,
+        data: { content }
+      }).then(addReaction => {
+        setReactions(reactions.concat(addReaction))
+      })
+    }
+  }
+
+  return [reactions, updateReaction]
+}

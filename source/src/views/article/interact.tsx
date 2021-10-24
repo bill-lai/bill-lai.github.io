@@ -5,9 +5,15 @@ import style from './style.module.scss'
 import { useGlobalState } from 'src/state'
 import { Link } from 'react-router-dom'
 import { queryRoutePath } from 'src/router'
-import { ReactionItems, ReactionItem, iconMaps, onIncrement } from './reactions'
 import { CommitInput, Commits } from './comment'
 import { isLocalAuth } from 'src/github'
+import { 
+  ReactionItems, 
+  ReactionItem, 
+  iconMaps, 
+  onIncrement,
+  ReactionServeFactory
+ } from './reactions'
 
 
 type ArticleReactionsProps = {
@@ -65,11 +71,13 @@ const Interact = witchParentClass((props: InteractProp) => {
     () => axios.get(config.comment, { params: { labels: '' } }),
     []
   )
-  const [reactions, setReactions] = useGlobalState(
-    `${props.issues.number}/reactions`,
-    () => axios.get(config.articleReactions, { paths: { id:props.issues.number } }) ,
-    []
-  )
+  const [reactions, onIncrement] = ReactionServeFactory({
+    allApi: config.articleReactions,
+    delApi: config.articleReaction,
+    addApi: config.articleReactions,
+    namespace: `${props.issues.number}/reactions`,
+    paths: { id:props.issues.number }
+  })
 
   React.useEffect(() => {
     isAuth &&
@@ -80,31 +88,7 @@ const Interact = witchParentClass((props: InteractProp) => {
     <div className={style['interact-layer']}>
       <JoinColumns {...props.column} className={style.section} />
       <ArticleReactions 
-        onIncrement={
-          (content, info) => {
-            if (info) {
-              axios.delete(config.articleReaction, {
-                paths: {
-                  id: props.issues.number,
-                  reactionId: info.reactionId
-                }
-              }).then(() => {
-                setReactions(
-                  reactions.filter(oReaction => oReaction.id !== info.reactionId)
-                )
-              })
-            } else {
-              axios.request({
-                url: config.articleReactions,
-                method: 'POST',
-                paths: { id: props.issues.number },
-                data: { content }
-              }).then(addReaction => {
-                setReactions(reactions.concat(addReaction as any))
-              })
-            }
-          }
-        }
+        onIncrement={ onIncrement }
         className={style.section} 
         reactions={reactions}
         userInfo={userInfo}

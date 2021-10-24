@@ -80,7 +80,8 @@ const getArticle = (queryId) =>
       for (let column of columns) {
         const article = column.articles.find(({id}) => id === queryId)
         if (article) {
-          article.column = column
+          article.column = {...column}
+          delete article.column.articles
           return article
         }
       }
