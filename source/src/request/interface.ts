@@ -3,16 +3,19 @@ import {
   columns,
   userInfo,
   token,
-  comment,
+  comments,
   articleReactions,
   articleReaction,
-  authorize
+  authorize,
+  commentReactions,
+  commentReaction
 } from './config'
 
 import {
   Article,
   ColumnList,
   UserInfo,
+  Comment,
   CommentList,
   Reaction,
   Reactions,
@@ -59,12 +62,16 @@ export type Interfaces = {
       }
     },
     GitHubBaseReq & {
-      url: typeof comment,
-      params: { labels: string },
+      url: typeof comments,
+      paths: { issuesId: number },
       response: CommentList
     },
     GithubReactionBaseReq & {
       url: typeof articleReactions,
+      response: Reactions
+    },
+    GithubReactionBaseReq & {
+      url: typeof commentReactions,
       response: Reactions
     },
   ],
@@ -78,13 +85,6 @@ export type Interfaces = {
       },
       response: string
     },
-    GitHubBaseReq & {
-      url: typeof comment,
-      data: {
-        body: string,
-        labels: Array<string>
-      }
-    },
     GitHubAuth & GithubReactionBaseReq & {
       url: typeof articleReactions,
       data: {
@@ -92,10 +92,31 @@ export type Interfaces = {
       },
       response: Reaction
     },
+    GitHubAuth & GithubReactionBaseReq & {
+      url: typeof commentReactions,
+      data: {
+        content: ReactionContent
+      },
+      response: Reaction
+    },
+    GitHubAuth & GitHubBaseReq & {
+      url: typeof comments,
+      paths: { issuesId: number },
+      data: {
+        body: string
+      },
+      response: Omit<Comment, 'reactions'>
+    },
   ],
   DELETE: [
     GitHubAuth & GithubReactionBaseReq & {
       url: typeof articleReaction,
+      paths: {
+        reactionId: number
+      }
+    },
+    GitHubAuth & GithubReactionBaseReq & {
+      url: typeof commentReaction,
       paths: {
         reactionId: number
       }

@@ -78,7 +78,7 @@ export const authIntercept = {
   reqHandler() {
     const tokenConfig = getStoreTokenConfig()
     if (!tokenConfig) {
-      throw '未登录'
+      throw new Error('未登录')
     } else {
       return {
         headers: {
@@ -89,8 +89,11 @@ export const authIntercept = {
   },
   urls: [
     config.userInfo,
+    [config.comments, 'POST'],
     [config.articleReactions, 'POST'],
-    [config.articleReaction, 'DELETE']
+    [config.articleReaction, 'DELETE'],
+    [config.commentReactions, 'POST'],
+    [config.commentReaction, 'DELETE'],
   ] as const
 }
 
@@ -98,9 +101,11 @@ export const authIntercept = {
 export const pathIntercepet = {
   reqHandler: () => ({ paths: { owner, repo } }),
   urls: [
-    config.comment,
+    config.comments,
     config.articleReactions,
-    config.articleReaction
+    config.articleReaction,
+    config.commentReactions,
+    config.commentReaction
   ] as const
 }
 
@@ -117,6 +122,6 @@ export const commentIntercepet = {
     }
   },
   urls: [
-    config.comment
+    config.comments
   ] as const
 }

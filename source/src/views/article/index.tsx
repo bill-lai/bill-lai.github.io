@@ -117,7 +117,6 @@ const ArticleInfo = () => {
             onShowChange={titleShowScreenChange}
           />
           <Interact className="commit-layer" {...article} />
-          
         </React.Fragment>
        }
       right={ 

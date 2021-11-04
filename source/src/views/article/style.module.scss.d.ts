@@ -2,11 +2,13 @@
 // Please do not change this file!
 interface CssExports {
   'article-reactions': string;
-  'comment-layer': string;
+  'boundary': string;
   'interact-layer': string;
   'join-columns': string;
   'reactions': string;
   'section': string;
+  'unauth': string;
+  'variable': string;
 }
 export const cssExports: CssExports;
 export default cssExports;

@@ -1,3 +1,7 @@
+.input-marked {
+  font-size: 0.9rem !important;
+}
+
 .marked-body {
 
   --background: #282a36;
@@ -11,6 +15,7 @@
   --purple: #bd93f9;
   --red: #ff5555;
   --yellow: #f1fa8c;
+  --block-color: #ececec;
   
   font-size: 1.2rem;
   
@@ -21,6 +26,10 @@
     font-weight: 700;
     color: #333;
     padding: .065em .4em;
+  }
+
+  em {
+    font-style: italic;
   }
 
   a {
@@ -86,7 +95,7 @@
     box-shadow: 0 0 20px rgba(0,0,0,.1);
     color: var(--foreground);
     background: var(--background);
-    font-size: 1.1rem
+    font-size: 1em
   }
 
   table {
@@ -111,6 +120,12 @@
     tr:nth-child(2n) {
       background-color: #f9f9f9;
     }
+  }
+
+  blockquote {
+    padding: 0 1em;
+    color: #57606a;
+    border-left: 0.25em solid var(--block-color);
   }
 
   .token {

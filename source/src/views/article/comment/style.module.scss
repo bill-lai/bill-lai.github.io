@@ -1,23 +1,11 @@
-.unauth {
-  position: relative;
-  padding: 20px 16px;
-  border: 1px solid #d4a72c66;
-  border-radius: 6px;
-  background-color: #fff8c5;
-  font-size: 14px;
-  line-height: 1.5;
-  margin-top: 36px;
-}
 
-
-.commit-item {
+.chat {
   --avatarWidth: 40px;
   --arrow: 16px;
-  --padding: var(--arrow);
 
   margin-left: calc(var(--avatarWidth) + var(--arrow));
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius);
 
 
   .head {
@@ -25,9 +13,6 @@
     height: var(--avatarWidth);
     box-sizing: border-box;
     padding: 0 var(--padding);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     background-color: var(--background-color);
 
     &::after,
@@ -38,6 +23,8 @@
       height: var(--arrow);
       width: calc(var(--arrow) / 2);
       clip-path: polygon(0 50%, 100% 0, 100% 100%);
+      top: 50%;
+      transform: translateY(-50%);
     }
 
     &::before {
@@ -72,7 +59,19 @@
   }
 
   .body {
-    padding: var(--arrow);
+    padding: var(--padding);
+  }
+}
+
+
+.commit-item {
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .body {
     font-size: 1rem;
     max-height: 600px;
     overflow-y: auto;
@@ -89,6 +88,13 @@
       font-size: 1em;
     }
   }
+
+  .reactions {
+    padding-top: var(--padding);
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+  }
 }
 
 .commit-item-layer {
@@ -96,4 +102,64 @@
     margin-top: 2rem;
   }
   margin-bottom: 2rem;
+}
+
+.md-edit {
+  --padding: 8px;
+
+  .mode-tabs {
+    padding-top: var(--padding);
+    height: 100%;
+    span {
+      display: inline-flex;
+      padding: 0 15px;
+      height: 100%;
+      align-items: center;
+      margin-right: 5px;
+      cursor: pointer;
+      color: var(--vice-font-color);
+      transition: color .3s linear;
+
+      &.active {
+        background-color: #fff;
+        cursor: initial;
+        color: var(--main-font-color);
+        border: 1px solid var(--border-color);
+        border-bottom: none;
+        border-top-left-radius: var(--radius);
+        border-top-right-radius: var(--radius);
+      }
+
+      &:not(.active):hover {
+        color: var(--main-font-color);
+      }
+    }
+  }
+
+  .input {
+    display: block;
+    width: 100%;
+    height: 200px;
+  }
+
+  .btns {
+    overflow: hidden;
+    margin-top: var(--padding);
+
+    button {
+      padding: 5px 16px;
+      background-color: #159957;
+      float: right;
+      color: #fff;
+      border-radius: var(--radius);
+      border: none;
+
+      &[disabled] {
+        opacity: .7;
+      }
+      &:not([disabled]) {
+        cursor: pointer;
+      }
+    }
+  }
 }

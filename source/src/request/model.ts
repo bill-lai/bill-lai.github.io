@@ -54,13 +54,11 @@ export type UserInfo = {
 
 export type Comment = {
   id: string,
-  number: number,
-  title: string,
   user: UserInfo,
-  labels: Array<string>,
+  node_id: string,
   body: string,
   created_at: string,
-  reactions: []
+  reactions: ReactionSimples
 }
 
 export type ReactionContent = '+1' | '-1' | 'laugh' | 'confused' | 'heart' | 'hooray' | 'rocket' | 'eyes'
@@ -69,6 +67,11 @@ export type Reaction = {
   created_at: string,
   id: number,
   user: UserInfo
+}
+export type ReactionSimples = {
+  [key in ReactionContent]: number
+} & {
+  url: string
 }
 
 export type Reactions = Array<Reaction>

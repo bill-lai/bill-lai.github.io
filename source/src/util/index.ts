@@ -12,7 +12,11 @@ export const analysisMarked = (() => {
     smartLists: true,
     smartypants: false,
     highlight: function (code,lang) {
-      return prismjs.highlight(code, prismjs.languages[lang], lang)
+      if (prismjs.languages[lang]) {
+        return prismjs.highlight(code, prismjs.languages[lang], lang)
+      } else {
+        return prismjs.highlight(code, prismjs.languages['plaintext'], 'plaintext')
+      }
     }
   });
 

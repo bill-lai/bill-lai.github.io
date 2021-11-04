@@ -8,8 +8,8 @@ import {
   Reactions, 
   UserInfo, 
   ReactionContent, 
-  config, 
-  Reaction 
+  config,
+  ReactionSimples
 } from "src/request"
 
 type TReactionInfo = {
@@ -104,18 +104,32 @@ export type onIncrement = (
 export const ReactionItems = witchParentClass(
   (
     props: { 
-      data: Reactions,
+      data: Reactions | ReactionSimples,
       userInfo?: UserInfo,
       onIncrement?: onIncrement,
       defaultEnableds?: TransformReactionsArgs['defaultEnableds']
     }
   ) => {
-    const treaction = transformReactions({ 
-      reactions: props.data, 
-      userInfo: props.userInfo,
-      defaultEnableds: props.defaultEnableds
-    });
+    const treaction = Array.isArray(props.data)
+      ? transformReactions({ 
+        reactions: props.data, 
+        userInfo: props.userInfo,
+        defaultEnableds: props.defaultEnableds
+      })
+      : Object.keys(props.data).reduce(
+        (t, k) => ({
+          ...t,
+          [k]: { count: (props.data as ReactionSimples)[k as ReactionContent] }
+        }),
+        {} as TReaction
+      )
     const items = (Object.keys(treaction) as Array<keyof typeof treaction>)
+      .filter(
+        key => iconMaps[key] && (
+            treaction[key].count > 0 || 
+            props.defaultEnableds?.includes(key)
+          )
+      )
       .map(key => (
         <ReactionItem 
           key={key}
@@ -136,10 +150,10 @@ export const ReactionItems = witchParentClass(
 
 type URL = typeof config
 export type ReactionOperProp = {
-  delApi?: URL['articleReaction'],
-  addApi?: URL['articleReactions'],
-  allApi: URL['articleReactions'],
-  paths: { id: number }
+  delApi?: URL['articleReaction'] | URL['commentReaction'],
+  addApi?: URL['articleReactions'] | URL['commentReactions'],
+  allApi: URL['articleReactions'] | URL['commentReactions'],
+  paths: { id: any }
   namespace: string
 }
 

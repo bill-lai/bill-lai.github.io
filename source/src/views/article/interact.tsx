@@ -1,12 +1,11 @@
 import * as React from 'react'
-import { UserInfo, Article, Reactions, ReactionContent, axios, config } from 'src/request'
 import { witchParentClass } from 'src/hoc'
 import style from './style.module.scss'
 import { useGlobalState } from 'src/state'
 import { Link } from 'react-router-dom'
 import { queryRoutePath } from 'src/router'
-import { CommitInput, Commits } from './comment'
-import { isLocalAuth } from 'src/github'
+import { CommitInput, Comments } from './comment'
+import { getAuthLink, isLocalAuth } from 'src/github'
 import { 
   ReactionItems, 
   ReactionItem, 
@@ -14,6 +13,15 @@ import {
   onIncrement,
   ReactionServeFactory
  } from './reactions'
+ import { 
+  UserInfo, 
+  Article, 
+  Reactions, 
+  ReactionContent, 
+  ReactionSimples, 
+  axios, 
+  config 
+} from 'src/request'
 
 
 type ArticleReactionsProps = {
@@ -25,6 +33,18 @@ type ArticleReactionsProps = {
   defaultEnableds?: Array<ReactionContent>
 }
 
+type CompoentReactionSimples = Omit<ReactionSimples, 'url'>
+
+const initReactionSimples: CompoentReactionSimples = {
+  '+1': 0,
+  '-1': 0,
+  'confused': 0,
+  'eyes': 0,
+  'heart': 0,
+  'hooray': 0,
+  'laugh': 0,
+  'rocket': 0
+}
 
 const ArticleReactions = witchParentClass((props: ArticleReactionsProps) => (
     <div className={style['article-reactions']}>
@@ -64,11 +84,12 @@ type InteractProp = {
 }
 
 const Interact = witchParentClass((props: InteractProp) => {
+  const paths = { issuesId: props.issues.number }
   const [userInfo, setUserInfo] = React.useState<UserInfo | undefined>(undefined)
   const [isAuth] = React.useState(isLocalAuth())
-  const [commits] = useGlobalState(
-    `article/commits/${props.issues.number}`,
-    () => axios.get(config.comment, { params: { labels: '' } }),
+  const [comments, setComments] = useGlobalState(
+    `article/comments/${props.issues.number}`,
+    () => axios.get(config.comments, { paths }),
     []
   )
   const [reactions, onIncrement] = ReactionServeFactory({
@@ -79,25 +100,52 @@ const Interact = witchParentClass((props: InteractProp) => {
     paths: { id:props.issues.number }
   })
 
+  const [editTxt, setEditTxt] = React.useState('')
+
+  const submitComment = (body: string) => {
+    axios.post(config.comments, { body }, { paths } )
+      .then(comment => {
+        setComments([
+          {
+            ...comment,
+            reactions: { ...initReactionSimples, url: '' }
+          },
+          ...comments
+        ])
+      })
+  }
+
   React.useEffect(() => {
     isAuth &&
       axios.get(config.userInfo).then(setUserInfo)
   }, [isAuth])
 
   return (
-    <div className={style['interact-layer']}>
+    <div className={style['interact-layer'] + ' ' + style['variable']}>
       <JoinColumns {...props.column} className={style.section} />
       <ArticleReactions 
         onIncrement={ onIncrement }
         className={style.section} 
         reactions={reactions}
         userInfo={userInfo}
-        comment={commits.length} 
+        comment={comments.length} 
         defaultEnableds={['+1']}
         view={8}
       />
-      <CommitInput userInfo={userInfo} />
-      <Commits className={style['comment-layer']} commits={commits} />
+      <div className={style['boundary']}>
+        {
+          userInfo 
+            ? <CommitInput 
+                userInfo={userInfo} 
+                onChange={setEditTxt} 
+                value={editTxt} 
+                onSubmit={submitComment}/>
+            : <div className={style.unauth}>
+                暂未授权登录，<a href={getAuthLink()}>授权跟博主互动</a>
+              </div>
+        }
+      </div>
+      <Comments className={style['boundary']} comments={comments} user={userInfo} />
     </div>
   )
 })
