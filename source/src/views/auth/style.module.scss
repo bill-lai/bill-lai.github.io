@@ -1,9 +1,18 @@
 .layer {
   height: 100vh;
+  padding-top: 20vh;
+
+  > div {
+    display: block;
+    position: relative;
+    height: 200px;
+    > div {
+      background: none;
+    }
+  }
 
   p {
     font-size: 1.2rem;
     text-align: center;
-    padding-top: 20vh;
   }
 }

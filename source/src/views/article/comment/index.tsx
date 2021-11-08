@@ -1,18 +1,17 @@
 import * as React from 'react'
-import { witchParentClass } from 'src/hoc'
-import style from './style.module.scss'
-import { analysisMarked } from 'src/util'
 import * as SimpleMDE from 'simplemde'
+import style from './style.module.scss'
+import { auth } from 'src/github'
+import { ReactionItems } from '../reactions'
+import { analysisMarked, formatDate } from 'src/util'
+import { witchParentClass } from 'src/hoc'
+import { TipSelect } from 'src/components/tip-select'
+import { More } from '../reactions/icons'
 import { 
   UserInfo, 
   Comment as CommentType, 
-  CommentList,
-  config
+  CommentList
 } from 'src/request'
-import {
-  ReactionItems, 
-  ReactionServeFactory
-} from '../reactions'
 
 type UserInfoProps = {
   userInfo: UserInfo
@@ -46,13 +45,26 @@ const modeDesc = {
   [modeEnum.VIEW]: '预览' 
 } as const
 
+export type InputRef = React.RefObject<{focus: () => void}>
 type InputProps = UserInfoProps & {
+  forwardRef?: InputRef
   onChange?: (newValue: string, oldValue: string) => void
-  onSubmit: (value: string) => void, 
+  children?: any,
   value?: string
 }
+
+const simpleLastFocus = (simplemde: SimpleMDE) => {
+  const value = simplemde.value()
+  const lines = value.split('\n')
+  simplemde.codemirror.focus()
+  simplemde.codemirror.setCursor(
+    lines.length,
+    lines[lines.length - 1].length
+  )
+}
+
 export const CommitInput = witchParentClass(
-  ({ userInfo, onSubmit, onChange, value = '' }: InputProps) => {
+  ({ userInfo, onChange, children, value = '', forwardRef }: InputProps) => {
     const editRef = React.useRef(null)
     const [currMode, setCurrMode] = React.useState(modeEnum.EDIT)
     const [simplemde, setSimplemde] = React.useState<SimpleMDE | null>(null)
@@ -62,7 +74,7 @@ export const CommitInput = witchParentClass(
         element: editRef.current as unknown as HTMLElement,
         spellChecker: false,
         status: false,
-        initialValue: value,
+        initialValue: '',
         toolbar: [
           'code', 'link', 'image', 'table', '|',
           'bold', 'italic', 'strikethrough', '|',
@@ -80,9 +92,18 @@ export const CommitInput = witchParentClass(
       }
     }, [editRef])
 
-    if (simplemde && simplemde.value() !== value) {
-      simplemde.value(value)
-    }
+    React.useEffect(() => {
+      if (simplemde && simplemde.value() !== value) {
+        simplemde.value(value)
+        simpleLastFocus(simplemde)
+      }
+    }, [value, simplemde])
+
+    React.useImperativeHandle(forwardRef, () => ({
+      focus() {
+        simplemde?.codemirror.focus()
+      }
+    }))
 
     const tabChange = (mode: modeEnum) => {
       if (!simplemde) return;
@@ -117,62 +138,115 @@ export const CommitInput = witchParentClass(
       <ChatBox userInfo={userInfo} head={head} className={style['md-edit']}>
         <textarea ref={editRef} className={style['input']}></textarea>
         <div className={style.btns}>
-          <button {...value ? {} : {disabled: true}} onClick={() => onSubmit(value)}>发表</button>
+          { children }
         </div>
       </ChatBox>
       )
   }
 )
 
-export const CommitItem = witchParentClass(
-  (props: CommentType & { currentUser?: UserInfo }) => {
-    const [reactions, onIncrement] = props.currentUser
-      ? ReactionServeFactory({
-          allApi: config.commentReactions,
-          delApi: config.commentReaction,
-          addApi: config.commentReactions,
-          namespace: `${props.id}/reactions`,
-          paths: { id: props.id }
-        })
-      : [props.reactions]
-      
-    return (
-      <ChatBox 
-        className={style['commit-item']}
-        userInfo={props.user}
-        head={
-          <React.Fragment>
-            <strong>{props.user.login}</strong>
-            <span>评论于{props.created_at}</span>
-          </React.Fragment>
-        }
-      >
-        <div 
-          className='marked-body'
-          dangerouslySetInnerHTML={{__html: analysisMarked(props.body)}} 
-        />
-        <div className={style.reactions}>
-          <ReactionItems 
-            data={reactions} 
-            onIncrement={onIncrement} 
-            userInfo={props.currentUser}
-            defaultEnableds={['+1', '-1']}
+export type CommentItemProps = CommentType & {
+  mode: 'ready' | 'write',
+  currentUser?: UserInfo, 
+  onOper?: (oper: string, args?: any) => void
+}
+export const CommentItem = witchParentClass(
+  (props: CommentItemProps) => {
+    const [body, setBody] = React.useState(props.body)
+    const [ reactions, onIncrement ] = 
+      // props.currentUser
+      //   ? ReactionServeFactory({
+      //       allApi: config.commentReactions,
+      //       delApi: config.commentReaction,
+      //       addApi: config.commentReactions,
+      //       user: props.currentUser,
+      //       namespace: `${props.id}/reactions`,
+      //       paths: { id: props.id }
+      //     })
+      //   : 
+        [ props.reactions, auth ]
+
+    const options = [
+      { label: '引用', value: 'quote' },
+      { label: '回复', value: 'reply' },
+      ...props.currentUser?.id === props.user.id
+        ? [
+            { label: '修改', value: 'update' },
+            { label: '删除', value: 'delete', warn: true }
+          ]
+        : []
+    ]
+
+
+    return props.mode === 'ready' 
+      ? <ChatBox 
+          className={style['commit-item']}
+          userInfo={props.user}
+          head={
+            <React.Fragment>
+              <strong>{props.user.login}</strong>
+              <div className={style.oper}>
+                <span className={style.time}>
+                  评论于{formatDate(new Date(props.created_at))}
+                </span>
+                <TipSelect 
+                  options={options} 
+                  onSelect={option => props.onOper && props.onOper(option.value)}>
+                  <More />
+                </TipSelect>
+              </div>
+            </React.Fragment>
+          }
+        >
+          <div 
+            className='marked-body'
+            dangerouslySetInnerHTML={{__html: analysisMarked(props.body)}} 
           />
-        </div>
-      </ChatBox>
-    )
+          <div className={style.reactions}>
+            <ReactionItems 
+              data={reactions} 
+              onIncrement={onIncrement} 
+              userInfo={props.currentUser}
+              defaultEnableds={['+1', '-1']}
+            />
+          </div>
+        </ChatBox>
+      : <CommitInput 
+          value={body} 
+          userInfo={props.currentUser as UserInfo} 
+          onChange={nbody => setBody(nbody)}>
+          <button 
+            className='primary'
+            {...body ? {} : {disabled: true}} 
+            onClick={ () => props.onOper && props.onOper('enterUpdate', body) }>
+            修改
+          </button>
+          <button 
+            className='cancel'
+            onClick={() => props.onOper && props.onOper('cacelUpdate')}>
+            取消
+          </button>
+        </CommitInput>
 })
 
+export type CommentsProps = { 
+  comments: CommentList, 
+  edits: CommentList,
+  user: UserInfo | undefined,
+  onOper: (marker: string, comment: CommentType, args?: any) => void
+}
 export const Comments = witchParentClass(
-  ({ comments, user }: { comments: CommentList, user: UserInfo | undefined }) => (
+  ({ comments, user, onOper, edits }: CommentsProps) => (
     comments.length 
       ? <div>
           {comments.map(item => 
-            <CommitItem 
+            <CommentItem 
               {...item}
+              mode={edits.includes(item) ? 'write' : 'ready'}
               currentUser={user}
               key={item.id}
               className={style['commit-item-layer']} 
+              onOper={(marker, args) => onOper(marker, item, args)}
             />
           )}
         </div>

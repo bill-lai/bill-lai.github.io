@@ -2,6 +2,7 @@ import * as React from 'react'
 import style from './style.module.scss'
 import { strToParams } from 'src/util'
 import { recoveryHist, getToken } from 'src/github'
+import Loading from 'src/components/loading'
 
 enum Step {
   UN,
@@ -15,10 +16,10 @@ enum Step {
 const stepMsg = {
   [Step.UN]: '',
   [Step.AUTH_ALLOW]: '已授权，正在获取信息',
-  [Step.AUTH_REFUSE]: '拒绝授权，正在跳转中……',
+  [Step.AUTH_REFUSE]: '拒绝授权，正在跳转中',
   [Step.TOKEN_REQ]: '已授权，正在获取信息',
-  [Step.TOKEN_SUCCESS]: '成功获取信息，正在跳转中……',
-  [Step.TOKEN_ERR]: '获取信息失败，正在跳转中……',
+  [Step.TOKEN_SUCCESS]: '成功获取信息，正在跳转中',
+  [Step.TOKEN_ERR]: '获取信息失败，正在跳转中',
 }
 
 const Auth = () => {
@@ -59,6 +60,7 @@ const Auth = () => {
 
   return (
     <div className={style.layer}>
+      <div><Loading status={true} /></div>
       <p>{stepMsg[step]}</p>
     </div>
   )

@@ -8,7 +8,8 @@ import {
   articleReaction,
   authorize,
   commentReactions,
-  commentReaction
+  commentReaction,
+  comment
 } from './config'
 
 import {
@@ -38,6 +39,10 @@ type GithubReactionBaseReq = GitHubBaseReq & {
   paths: { id: number }
 }
 
+type GithubCommentBaseReq = GitHubBaseReq & {
+  paths: { issuesId: number }
+}
+
 export type Interfaces = {
   GET: [
     {
@@ -61,9 +66,8 @@ export type Interfaces = {
         scope: string
       }
     },
-    GitHubBaseReq & {
+    GithubCommentBaseReq & {
       url: typeof comments,
-      paths: { issuesId: number },
       response: CommentList
     },
     GithubReactionBaseReq & {
@@ -99,14 +103,24 @@ export type Interfaces = {
       },
       response: Reaction
     },
-    GitHubAuth & GitHubBaseReq & {
+    GithubCommentBaseReq & {
       url: typeof comments,
-      paths: { issuesId: number },
       data: {
         body: string
       },
       response: Omit<Comment, 'reactions'>
     },
+  ],
+  PATCH: [
+    GitHubAuth & {
+      url: typeof comment,
+      paths: {
+        commentId: string
+      },
+      data: {
+        body: string
+      }
+    }
   ],
   DELETE: [
     GitHubAuth & GithubReactionBaseReq & {
@@ -120,7 +134,14 @@ export type Interfaces = {
       paths: {
         reactionId: number
       }
-    }
+    },
+    GitHubAuth & {
+      url: typeof comment,
+      paths: {
+        commentId: string
+      }
+    },
+
   ]
 }
 

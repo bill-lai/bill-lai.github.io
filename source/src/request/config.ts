@@ -26,6 +26,7 @@ export const articleReaction = `https://api.github.com/repos/:owner/:repo/issues
 // -------------评论-------------------
 // 评论数据
 export const comments = `https://api.github.com/repos/:owner/:repo/issues/:issuesId/comments`
+export const comment = `https://api.github.com/repos/:owner/:repo/issues/comments/:commentId`
 
 
 // -------------评论互动----------------

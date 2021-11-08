@@ -90,6 +90,8 @@ export const authIntercept = {
   urls: [
     config.userInfo,
     [config.comments, 'POST'],
+    [config.comment, 'DELETE'],
+    [config.comment, 'PATCH'],
     [config.articleReactions, 'POST'],
     [config.articleReaction, 'DELETE'],
     [config.commentReactions, 'POST'],
@@ -105,7 +107,8 @@ export const pathIntercepet = {
     config.articleReactions,
     config.articleReaction,
     config.commentReactions,
-    config.commentReaction
+    config.commentReaction,
+    config.comment
   ] as const
 }
 

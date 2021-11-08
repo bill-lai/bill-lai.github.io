@@ -12,7 +12,9 @@ interface CssExports {
   'input': string;
   'md-edit': string;
   'mode-tabs': string;
+  'oper': string;
   'reactions': string;
+  'time': string;
 }
 export const cssExports: CssExports;
 export default cssExports;

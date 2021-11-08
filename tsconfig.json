@@ -8,6 +8,7 @@
     },
     "types": ["node"],
     "moduleResolution": "node",
+    "module": "ESNext",
     "allowJs": true,
     "target": "ESNext",
     "strict": true,

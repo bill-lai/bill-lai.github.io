@@ -14,26 +14,40 @@ export const injectState = (data: { [key: string]: any }) => {
 export function useGlobalState<T>(
   key: string, 
   getPromise: () => Promise<T>,
-): [T | undefined, React.Dispatch<React.SetStateAction<T>>]
+): [
+  T | undefined, 
+  React.Dispatch<React.SetStateAction<T>>
+]
 
 export function useGlobalState<T>(
   key: string, 
   getPromise: () => Promise<T>,
   defaultVal: T
-): [T, React.Dispatch<React.SetStateAction<T>>]
+): [
+  T, 
+  React.Dispatch<React.SetStateAction<T>>
+]
 
 export function useGlobalState<T, K>(
   key: string, 
   getPromise: () => Promise<T>,
   transform: (data: T) => K,
-): [K | undefined, React.Dispatch<React.SetStateAction<K | undefined>>, (data: T) => void]
+): [
+  K | undefined, 
+  React.Dispatch<React.SetStateAction<K | undefined>>, 
+  (data: T) => void
+]
 
 export function useGlobalState<T, K>(
   key: string, 
   getPromise: () => Promise<T>,
   transform: (data: T) => K,
   defaultVal: T,
-): [K, React.Dispatch<React.SetStateAction<K>>, (data: T) => void]
+): [
+  K, 
+  React.Dispatch<React.SetStateAction<K>>, 
+  (data: T) => void
+]
 
 
 export function useGlobalState <T, K>(
@@ -70,7 +84,7 @@ export function useGlobalState <T, K>(
     setValue((transform as (data: T) => K)(value))
   )
   
-  const [value, setValue] = React.useState(() => 
+  const [value, setValue] = React.useState(
     defaultVal && (transform ? transform(defaultVal) : defaultVal)
   )
 

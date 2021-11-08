@@ -12,9 +12,7 @@ import {
 } from 'react-router-dom'
 import Slide from './layout/Slide'
 
-
-
-const App: React.FC<{}> = () => {
+const App = () => {
   const views = router.map(({path, Component}) => (
     <Route exact path={path} key={path}><Component /></Route>
   ))

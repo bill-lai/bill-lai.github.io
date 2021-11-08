@@ -9,7 +9,8 @@ import {
   UserInfo, 
   ReactionContent, 
   config,
-  ReactionSimples
+  ReactionSimples,
+  Reaction
 } from "src/request"
 
 type TReactionInfo = {
@@ -154,15 +155,16 @@ export type ReactionOperProp = {
   addApi?: URL['articleReactions'] | URL['commentReactions'],
   allApi: URL['articleReactions'] | URL['commentReactions'],
   paths: { id: any }
-  namespace: string
+  namespace: string,
+  user?: UserInfo
 }
 
 export type UpdateReaction = (content: ReactionContent, model?: TReactionInfo) => void
 
 export function ReactionServeFactory(
   config: Required<ReactionOperProp>
-    | Omit<Required<ReactionOperProp>, 'addApi'>
-    | Omit<Required<ReactionOperProp>, 'delApi'>
+    | Omit<Required<ReactionOperProp>, 'addApi' | 'user'>
+    | Omit<Required<ReactionOperProp>, 'delApi' | 'user'>
 ): [Reactions, UpdateReaction]
 export function ReactionServeFactory(
   config: Omit<ReactionOperProp, 'delApi' | 'addApi'>
@@ -172,6 +174,7 @@ export function ReactionServeFactory({
   allApi, 
   addApi, 
   paths,
+  user,
   namespace = allApi
 }: ReactionOperProp) {
   const [reactions, setReactions] = useGlobalState(
@@ -179,29 +182,50 @@ export function ReactionServeFactory({
     () => axios.get(allApi, { paths }),
     []
   )
+  const [isReqing, setIsReqing] = React.useState(false);
 
   const updateReaction: UpdateReaction = (content, model) => {
+    if (isReqing || !user) return;
+    let promise: Promise<any> | null = null
+
+    setIsReqing(true)
+
     if (model && delApi) {
-      axios.delete(delApi, {
+      setReactions(
+        reactions.filter(oReaction => oReaction.id !== model.id)
+      )
+      promise = axios.delete(delApi, {
         paths: {
           ...paths,
           reactionId: model.id
         }
-      }).then(() => {
-        setReactions(
-          reactions.filter(oReaction => oReaction.id !== model.id)
-        )
       })
     } else if (!model && addApi) {
-      axios.request({
+      const temporary: Reaction = {
+        content: content,
+        created_at: new Date().toISOString(),
+        id: 0,
+        user
+      }
+      setReactions(reactions.concat(temporary))
+
+      promise = axios.request({
         url: addApi,
         method: 'POST',
         paths,
         data: { content }
       }).then(addReaction => {
-        setReactions(reactions.concat(addReaction))
+        setReactions(
+          reactions
+            .filter(reaction => reaction !== temporary)
+            .concat(addReaction)
+        )
       })
     }
+
+    promise
+      ?.catch(() => setReactions(reactions))
+       .then(() => setIsReqing(false))
   }
 
   return [reactions, updateReaction]

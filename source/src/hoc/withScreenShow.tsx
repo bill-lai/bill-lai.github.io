@@ -8,7 +8,7 @@ export type WithScreenAttachProps<T> = {
   selector?: T, 
   forwardRef?: WithScreenRef 
 }
-type ShowChange<T extends boolean> = (isShow: boolean, dom: T extends true ? HTMLElement : void) => void
+export type ShowChange<T extends boolean = true> = (isShow: boolean, dom: T extends true ? HTMLElement : void) => void
 type Ele = React.ReactElement<any>
 type Ref = React.RefObject<HTMLElement | null>
 type Offset = { x?: number | 'center', y?: number | 'center' }
@@ -215,22 +215,20 @@ export const withScreenShow = <P extends object>(
         .filter(Boolean) as Array<HTMLElement>
 
       
-      if (onShowChange) {
-        React.useEffect(() => 
-          listenElesAppear(
-            view, 
-            selector 
-              ? getEles().reduce(
-                (t, c) => 
-                  t.concat(Array.from(c.querySelectorAll(selector))), 
-                []
-              ) 
-              : getEles(), 
-            onShowChange, 
-            !!selector
-          ) 
-        )
-      }
+      React.useEffect(() => 
+        onShowChange && listenElesAppear(
+          view, 
+          selector 
+            ? getEles().reduce(
+              (t, c) => 
+                t.concat(Array.from(c.querySelectorAll(selector))), 
+              []
+            ) 
+            : getEles(), 
+          onShowChange, 
+          !!selector
+        ) 
+      )
 
       if (forwardRef) {
         React.useImperativeHandle(forwardRef, () => ({

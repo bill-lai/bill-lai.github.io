@@ -1,14 +1,23 @@
 import * as React from 'react'
-import { axios, config, ArticleDirs, ArticleTemp } from 'src/request'
+import { axios, config, ArticleDirs } from 'src/request'
 import { useParams } from 'react-router-dom'
 import ContentLayer from 'src/components/content-layer'
-import { debounce } from 'src/util'
 import './marked.scss'
 import { Navigation, Navs } from 'src/components/navigation'
 import { withScreenShow } from 'src/hoc'
 import { useGlobalState } from 'src/state'
 import app from 'src/platform'
-import Interact from './interact'
+import { Loading } from 'src/components/loading'
+import style from './style.module.scss'
+
+const Interact = React.lazy(() => import('./interact'))
+
+
+export const LoadEle = () =>
+  <div className={style['article-loading-layer']}>
+    <Loading status={ true } /> 
+  </div> 
+export const ScreenLoadEle = withScreenShow(LoadEle)
 
 
 type NavItem = {
@@ -47,59 +56,27 @@ const MarkerBody = withScreenShow(({html}: { html: string }) =>
 
 const ArticleInfo = () => {
   const { id } = useParams() as { id: 'string' }
+  const [ showInteract, setShowInteract ] = React.useState(false)
+  const [ active, setActive ] = React.useState<NavItem | null>(null)
   const [ article ] = useGlobalState(
     `article/${id}`,
-    () => axios.get(config.article, { paths: { id } }),
-    article => {
-      let html = ''
-      let dirs: Navs<NavItem> = []
-  
-      const joinTemp = (temp: ArticleTemp) => {
-        if (temp) {
-          html += temp.body
-          dirs.push(...navsToDirs(temp.dirs))
-        }
-      }
-  
-      joinTemp(article.head)
-      joinTemp(article)
-      joinTemp(article.foot)
-  
-      return {
+    () => axios
+      .get(config.article, { paths: { id } })
+      .then(article => ({
         ...article,
-        html, 
-        dirs
-      }
-    }
+        ...[article.head, article, article.foot].reduce(
+          (t, c) => c 
+            ? {
+                html: t.html + c.body,
+                dirs: t.dirs.concat(navsToDirs(c.dirs))
+              }
+            : t, 
+          { html: '', dirs: [] as Navs<NavItem> }
+        )
+      }))
   )
-  const [ active, setActive ] = React.useState<NavItem | null>(null)
   
-  let isDestroy = false
-  React.useEffect(() => () => {
-    isDestroy = true
-  })
-
-  if (!article) return null;
-  
-  const showTitleEls: Array<HTMLElement> = []
-  const scrollChangeActive = debounce(() => {
-    if (showTitleEls.length) {
-      const title = showTitleEls[0].textContent
-      const item = title && findDir(article.dirs, title)
-      !isDestroy && item && setActive(item)
-      showTitleEls.length = 0
-    }
-  })
-
-  const titleShowScreenChange = (isShow: boolean, dom: HTMLElement) => {
-    if (isShow) {
-      showTitleEls.push(dom)
-    } else {
-      const index = showTitleEls.indexOf(dom)
-      index > -1 && showTitleEls.splice(index, 1)
-    }
-    scrollChangeActive()
-  }
+  if (!article) return <ContentLayer main={ <LoadEle /> } />
 
   app.setAppTitle(article.title)
 
@@ -114,9 +91,26 @@ const ArticleInfo = () => {
           <MarkerBody 
             html={article.html}
             selector="h2,h3"
-            onShowChange={titleShowScreenChange}
+            onShowChange={(isShow, dom) => {
+              let item;
+              if (isShow 
+                  && dom.textContent 
+                  && (item = findDir(article.dirs, dom.textContent))
+                ) {
+                setActive(item)
+              }
+            }}
           />
-          <Interact className="commit-layer" {...article} />
+          { showInteract
+            ? <React.Suspense fallback={ <LoadEle /> }>
+                <Interact className="commit-layer" {...article} />
+              </React.Suspense> 
+            : <ScreenLoadEle 
+                onShowChange={(isShow) => 
+                  isShow && !showInteract && setShowInteract(isShow) 
+                }
+              />
+          }
         </React.Fragment>
        }
       right={ 

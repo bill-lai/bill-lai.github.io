@@ -39,7 +39,7 @@
     transition: color .3s ease;
     
     &:hover {
-      color: #157b75;
+      color: var(--vice-color);
     }
   }
 

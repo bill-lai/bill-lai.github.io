@@ -1,10 +1,15 @@
 
 html {
+  --main-color: #076dd0;
+  --vice-color: #159957;
   --link-color: #076dd0;
   --main-font-color: #333;
   --vice-font-color: #666;
   --background-color: #f7f7f7;
   --border-color: #ececec;
+  --warn: #cf222e;
+  --arrow: 16px;
+  --radius: 6px;
   font-size: 14px;
 }
 
@@ -60,11 +65,24 @@ html {
   transition: color .3s ease;
 
   &:hover {
-    color: #157b75;
+    color: var(--vice-color);
   }
 }
 
+*[disabled],
 .disable {
   pointer-events: none !important;
-  color: #6d6d6d !important;
+  color: #6d6d6d;
+}
+
+button {
+  &.cancel {
+    background: none;
+    color: var(--warn);
+  }
+
+  &.primary {
+    background-color: var(--link-color);
+    color: #fff;
+  }
 }
