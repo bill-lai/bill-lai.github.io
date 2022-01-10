@@ -1,8 +1,7 @@
 import * as React from 'react'
 import * as SimpleMDE from 'simplemde'
 import style from './style.module.scss'
-import { auth } from 'src/github'
-import { ReactionItems } from '../reactions'
+import { ReactionItems, ReactionServeFactory, ReactSimleFactory } from '../reactions'
 import { analysisMarked, formatDate } from 'src/util'
 import { witchParentClass } from 'src/hoc'
 import { TipSelect } from 'src/components/tip-select'
@@ -10,7 +9,8 @@ import { More } from '../reactions/icons'
 import { 
   UserInfo, 
   Comment as CommentType, 
-  CommentList
+  CommentList,
+  config
 } from 'src/request'
 
 type UserInfoProps = {
@@ -152,19 +152,18 @@ export type CommentItemProps = CommentType & {
 }
 export const CommentItem = witchParentClass(
   (props: CommentItemProps) => {
-    const [body, setBody] = React.useState(props.body)
+    const [ body, setBody ] = React.useState(props.body)
     const [ reactions, onIncrement ] = 
-      // props.currentUser
-      //   ? ReactionServeFactory({
-      //       allApi: config.commentReactions,
-      //       delApi: config.commentReaction,
-      //       addApi: config.commentReactions,
-      //       user: props.currentUser,
-      //       namespace: `${props.id}/reactions`,
-      //       paths: { id: props.id }
-      //     })
-      //   : 
-        [ props.reactions, auth ]
+      props.currentUser
+        ? ReactionServeFactory({
+            allApi: config.commentReactions,
+            delApi: config.commentReaction,
+            addApi: config.commentReactions,
+            user: props.currentUser,
+            namespace: `${props.id}/reactions`,
+            paths: { id: props.id }
+          })
+        : ReactSimleFactory(props.reactions)
 
     const options = [
       { label: '引用', value: 'quote' },
@@ -250,7 +249,7 @@ export const Comments = witchParentClass(
             />
           )}
         </div>
-      : <div className="">
+      : <div className={style['un-comments']}>
           <p>暂无评论</p> 
         </div>
   )

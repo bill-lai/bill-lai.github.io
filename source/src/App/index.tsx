@@ -10,7 +10,7 @@ import {
   Switch,
   Redirect
 } from 'react-router-dom'
-import Slide from './layout/Slide'
+import Slide from './layout/slide'
 
 const App = () => {
   const views = router.map(({path, Component}) => (

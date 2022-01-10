@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Component } from './index'
-import { throttle } from 'src/util'
+import { debounce } from 'src/util'
 
 export type WithScreenRef = React.RefObject<{ goto: (offset?: Offset) => void } | null>
 export type WithScreenAttachProps<T> = { 
@@ -148,7 +148,7 @@ const listenElesAppear = (() => {
     Array<MapVal>
   >()
 
-  const scrollHandler = throttle(
+  const scrollHandler = debounce(
     function (this: View) {
       if (!viewMaps.has(this)) return;
       const maps = viewMaps.get(this)
@@ -185,7 +185,7 @@ const listenElesAppear = (() => {
       view.addEventListener('scroll', scrollHandler)
     }
     // 自动触发第一次
-    Promise.resolve().then(() => scrollHandler.bind(view)())
+    setTimeout(() => scrollHandler.bind(view)(), 500)
     maps.push(item)
 
     return () => {

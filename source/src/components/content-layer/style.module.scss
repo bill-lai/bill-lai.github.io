@@ -2,15 +2,13 @@
   display: flex;
 
   .main {
-    padding-top: var(--content-top);
-    padding-left: var(--content-top);
-    padding-bottom: var(--content-top);
-    padding-right: var(--main-padding-right);
-    background-color: #fff;
     flex: 1;
     max-width: 1200px;
     overflow: hidden;
     min-height: 100vh;
+    background-color: #fff;
+    padding: var(--content-top);
+    padding-right: var(--main-padding-right);
   }  
 
   .right-layer {
@@ -27,11 +25,6 @@
         padding-left: var(--right-padding-right);
       }
     }
-  }
-  
-
-  .bottom {
-    color: #000;
   }
 }
 
@@ -66,6 +59,7 @@
     width: 100%;
     position: sticky;
     top: -1px;
+    z-index: 1;
 
 
     &::before {

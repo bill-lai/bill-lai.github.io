@@ -1,13 +1,14 @@
 import * as React from 'react'
 import { axios, config, ArticleBase } from 'src/request'
-import Layer from 'src/components/content-layer'
+import Layer from 'src/app/layout/content'
 import style from './style.module.scss'
 import { Link } from 'react-router-dom'
 import { queryRoutePath } from 'src/router'
 import Navigation from 'src/components/navigation'
-import { ScrollGroupMange } from 'src/components/theme'
+import { ScrollGroupMange } from 'src/app/layout/theme'
 import { withScreenShow } from 'src/hoc'
 import { useGlobalState } from 'src/state'
+import { formatDate } from 'src/util'
 import app from 'src/platform'
 
 const ArticleItem = withScreenShow((props: ArticleBase) => {
@@ -15,7 +16,7 @@ const ArticleItem = withScreenShow((props: ArticleBase) => {
     <div className={style.layer}>
       <h2 className={`main-title ${style.title}`} id={props.id.toString()}>
         <Link to={queryRoutePath('article', {id: props.id})}>{props.title}</Link>
-        <span className="marker">{new Date(props.mtime).toString()}</span>
+        <span className="marker">{formatDate(new Date(props.mtime))}</span>
       </h2>
       <p className="desc">{props.desc}</p>
       <Link className="wlink" to={queryRoutePath('article', {id: props.id})}>继续阅读 »</Link>

@@ -1,4 +1,4 @@
-import Theme from 'src/components/theme'
+import Theme from 'src/app/layout/theme'
 import * as React from 'react'
 import { axios, config } from 'src/request'
 import { useGlobalState } from 'src/state'

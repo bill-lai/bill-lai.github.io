@@ -1,0 +1,10 @@
+.bottom {
+  margin-top: var(--content-top);
+  border-top: 1px solid var(--border-color);
+  padding-top: var(--content-top);
+  font-size: 0.8rem;
+  text-align: center;
+  a {
+    padding: 0 2px;
+  }
+}

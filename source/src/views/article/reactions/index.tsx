@@ -12,6 +12,7 @@ import {
   ReactionSimples,
   Reaction
 } from "src/request"
+import { auth } from "src/github"
 
 type TReactionInfo = {
   userId: number,
@@ -161,6 +162,7 @@ export type ReactionOperProp = {
 
 export type UpdateReaction = (content: ReactionContent, model?: TReactionInfo) => void
 
+const requestsIng: { [key in string]: boolean } = { }
 export function ReactionServeFactory(
   config: Required<ReactionOperProp>
     | Omit<Required<ReactionOperProp>, 'addApi' | 'user'>
@@ -182,51 +184,59 @@ export function ReactionServeFactory({
     () => axios.get(allApi, { paths }),
     []
   )
-  const [isReqing, setIsReqing] = React.useState(false);
+  requestsIng[namespace] = false
 
-  const updateReaction: UpdateReaction = (content, model) => {
-    if (isReqing || !user) return;
-    let promise: Promise<any> | null = null
+  const updateReaction: UpdateReaction = user
+    ? (content, model) => {
+        if (requestsIng[namespace]) return;
+        let promise: Promise<any> | null = null
 
-    setIsReqing(true)
+        requestsIng[namespace] = true
 
-    if (model && delApi) {
-      setReactions(
-        reactions.filter(oReaction => oReaction.id !== model.id)
-      )
-      promise = axios.delete(delApi, {
-        paths: {
-          ...paths,
-          reactionId: model.id
+        if (model && delApi) {
+          setReactions(
+            reactions.filter(oReaction => oReaction.id !== model.id)
+          )
+          promise = axios.delete(delApi, {
+            paths: {
+              ...paths,
+              reactionId: model.id
+            }
+          })
+        } else if (!model && addApi) {
+          const temporary: Reaction = {
+            content: content,
+            created_at: new Date().toISOString(),
+            id: 0,
+            user
+          }
+          setReactions(reactions.concat(temporary))
+
+          promise = axios.request({
+            url: addApi,
+            method: 'POST',
+            paths,
+            data: { content }
+          }).then(addReaction => {
+            setReactions(
+              reactions
+                .filter(reaction => reaction !== temporary)
+                .concat(addReaction)
+            )
+          })
         }
-      })
-    } else if (!model && addApi) {
-      const temporary: Reaction = {
-        content: content,
-        created_at: new Date().toISOString(),
-        id: 0,
-        user
+
+        promise
+          ?.catch(() => setReactions(reactions))
+          .then(() => requestsIng[namespace] = false)
       }
-      setReactions(reactions.concat(temporary))
-
-      promise = axios.request({
-        url: addApi,
-        method: 'POST',
-        paths,
-        data: { content }
-      }).then(addReaction => {
-        setReactions(
-          reactions
-            .filter(reaction => reaction !== temporary)
-            .concat(addReaction)
-        )
-      })
-    }
-
-    promise
-      ?.catch(() => setReactions(reactions))
-       .then(() => setIsReqing(false))
-  }
+    : auth
 
   return [reactions, updateReaction]
+}
+
+export const ReactSimleFactory = (reactions: ReactionSimples) => {
+  const [sReactions] = React.useState(reactions)
+
+  return [ sReactions, auth ] as const
 }

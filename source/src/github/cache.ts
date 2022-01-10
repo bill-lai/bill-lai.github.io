@@ -1,8 +1,5 @@
 const store = sessionStorage
 
-
-
-
 type SessionToken = {
   token: string,
   code: string

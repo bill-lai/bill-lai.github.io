@@ -1,4 +1,3 @@
-
 .chat {
   --avatarWidth: 40px;
 
@@ -6,42 +5,14 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
 
-
   .head {
-    position: relative;
     height: var(--avatarWidth);
     box-sizing: border-box;
     padding: 0 var(--padding);
     background-color: var(--background-color);
-
-    &::after,
-    &::before {
-      content: '';
-      position: absolute;
-      right: 100%;
-      height: var(--arrow);
-      width: calc(var(--arrow) / 2);
-      clip-path: polygon(0 50%, 100% 0, 100% 100%);
-      top: 50%;
-      transform: translateY(-50%);
-    }
-
-    &::before {
-      background-color: var(--border-color);
-    }
-
-    &::after {
-      background-color: var(--background-color);
-      margin-right: -3px;
-    }
     
     .avatar {
-      width: var(--avatarWidth);
-      height: var(--avatarWidth);
       position: absolute;
-      top: 0;
-      right: 100%;
-      margin-right: var(--arrow);
       border-radius: 50%;
       overflow: hidden;
 
@@ -61,7 +32,6 @@
     padding: var(--padding);
   }
 }
-
 
 .commit-item {
   .head {
@@ -112,8 +82,75 @@
   margin-bottom: 2rem;
 }
 
+@media screen and (max-width: 800px){
+  .chat {
+    margin-left: 0;
+
+    .head {
+      --imgWidth: calc(var(--avatarWidth) * 0.8);
+      --paddingLeft: calc(var(--padding) / 2);
+      position: relative;
+      padding-left: calc(var(--paddingLeft) + var(--imgWidth) + 10px);
+      
+      .avatar {
+        width: var(--imgWidth);
+        height: var(--imgWidth);
+        left: var(--paddingLeft);
+        top: 50%;
+        transform: translateY(-50%);
+      }
+    }
+  }
+  .md-edit .head .avatar {
+    display: none;
+  }
+}
+@media screen and (min-width: 801px){
+  .chat {
+    margin-left: calc(var(--avatarWidth) + var(--arrow));
+
+    .head {
+      position: relative;
+      
+      &::after,
+      &::before {
+        content: '';
+        position: absolute;
+        right: 100%;
+        height: var(--arrow);
+        width: calc(var(--arrow) / 2);
+        clip-path: polygon(0 50%, 100% 0, 100% 100%);
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      &::before {
+        background-color: var(--border-color);
+      }
+
+      &::after {
+        background-color: var(--background-color);
+        margin-right: -3px;
+      }
+
+      .avatar {
+        top: 0;
+        right: 100%;
+        width: var(--avatarWidth);
+        height: var(--avatarWidth);
+        margin-right: var(--arrow);
+      }
+    }
+  }
+}
+
+
 .md-edit {
   --padding: 8px;
+
+  .head {
+    padding-left: var(--padding);
+  }
 
   .mode-tabs {
     padding-top: var(--padding);
@@ -151,7 +188,6 @@
   }
 }
 
-
 .btns {
   overflow: hidden;
   margin-top: var(--padding);
@@ -170,4 +206,8 @@
       cursor: pointer;
     }
   }
+}
+
+.un-comments {
+  text-align: center;
 }

@@ -4,13 +4,14 @@ import { Column } from 'src/request'
 import { Link } from 'react-router-dom'
 import { witchParentClass } from 'src/hoc'
 import { queryRoutePath } from 'src/router'
+import { formatDate } from 'src/util'
 
 
 function ColumnItem(props: Column) {
   const articles = props.articles.map(({title, id, mtime}, i) =>(
     <li key={i}>
       <Link className="wlink" to={queryRoutePath('article', { id })}>{title}</Link>
-      <span className="marker">{new Date(mtime).toUTCString()}</span>
+      <span className="marker">{formatDate(new Date(mtime))}</span>
     </li>
   ))
 

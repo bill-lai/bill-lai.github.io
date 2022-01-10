@@ -15,6 +15,7 @@ interface CssExports {
   'oper': string;
   'reactions': string;
   'time': string;
+  'un-comments': string;
 }
 export const cssExports: CssExports;
 export default cssExports;

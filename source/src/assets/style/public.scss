@@ -1,5 +1,6 @@
 
 html {
+  --line-height: 1.8;
   --main-color: #076dd0;
   --vice-color: #159957;
   --link-color: #076dd0;
@@ -20,12 +21,19 @@ html {
 }
 
 .main-title {
+  --font-size: 2rem;
   margin-bottom: 1.78rem;
-  font-size: 2rem;
+  font-size: var(--font-size);
+  padding-right: var(--marker-width);
+  position: relative;
 
   span {
     float: right;
-    max-width: 200px;
+    line-height: calc(var(--line-height) * var(--font-size));
+
+    &::before {
+      content: '发布于';
+    }
   }
 }
 
@@ -48,12 +56,6 @@ html {
   font-size: 12px;
   margin-left: 5px;
   margin-right: 5px;
-  &::before {
-    content: '(';
-  }
-  &::after {
-    content: ')';
-  }
 }
 
 .wlink {

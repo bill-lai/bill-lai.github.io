@@ -98,7 +98,7 @@ const Interact = witchParentClass((props: InteractProp) => {
     null
   )
   const [editComments, setEditComments] = React.useState<CommentList>([])
-  let [reactions, onIncrement] = ReactionServeFactory({
+  const [reactions, onIncrement] = ReactionServeFactory({
     user: userInfo,
     allApi: config.articleReactions,
     delApi: config.articleReaction,
@@ -106,8 +106,6 @@ const Interact = witchParentClass((props: InteractProp) => {
     namespace: `${props.issues.number}/reactions`,
     paths: { id:props.issues.number }
   })
-
-  onIncrement = userInfo ? onIncrement : auth
 
   const [editTxt, setEditTxt] = React.useState('')
   const editRef: InputRef = React.createRef()

@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { axios, config, ArticleDirs } from 'src/request'
 import { useParams } from 'react-router-dom'
-import ContentLayer from 'src/components/content-layer'
+import ContentLayer from 'src/app/layout/content'
 import './marked.scss'
 import { Navigation, Navs } from 'src/components/navigation'
 import { withScreenShow } from 'src/hoc'
@@ -9,6 +9,7 @@ import { useGlobalState } from 'src/state'
 import app from 'src/platform'
 import { Loading } from 'src/components/loading'
 import style from './style.module.scss'
+import { formatDate } from 'src/util'
 
 const Interact = React.lazy(() => import('./interact'))
 
@@ -86,7 +87,7 @@ const ArticleInfo = () => {
         <React.Fragment>
           <h1 className="main-title">
             {article.title}
-            <span className="marker">{new Date(article.mtime).toString()}</span>
+            <span className="marker">{formatDate(new Date(article.mtime))}</span>
           </h1>
           <MarkerBody 
             html={article.html}
@@ -106,8 +107,10 @@ const ArticleInfo = () => {
                 <Interact className="commit-layer" {...article} />
               </React.Suspense> 
             : <ScreenLoadEle 
-                onShowChange={(isShow) => 
+                onShowChange={(isShow) => {
+                  console.log('loading', isShow)
                   isShow && !showInteract && setShowInteract(isShow) 
+                }
                 }
               />
           }
