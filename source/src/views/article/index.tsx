@@ -16,8 +16,8 @@ const Interact = React.lazy(() => import('./interact'))
 
 export const LoadEle = () =>
   <div className={style['article-loading-layer']}>
-    <Loading status={ true } /> 
-  </div> 
+    <Loading status={true} />
+  </div>
 export const ScreenLoadEle = withScreenShow(LoadEle)
 
 
@@ -48,74 +48,74 @@ const findDir = (dirs: Array<NavItem>, title: string): NavItem | null => {
   return null
 }
 
-const MarkerBody = withScreenShow(({html}: { html: string }) => 
-  <div 
-    className="marked-body" 
-    dangerouslySetInnerHTML={{__html: html}} 
+const MarkerBody = withScreenShow(({ html }: { html: string }) =>
+  <div
+    className="marked-body"
+    dangerouslySetInnerHTML={{ __html: html }}
   />
 )
 
 const ArticleInfo = () => {
   const { id } = useParams() as { id: 'string' }
-  const [ showInteract, setShowInteract ] = React.useState(false)
-  const [ active, setActive ] = React.useState<NavItem | null>(null)
-  const [ article ] = useGlobalState(
+  const [showInteract, setShowInteract] = React.useState(false)
+  const [active, setActive] = React.useState<NavItem | null>(null)
+  const [article] = useGlobalState(
     `article/${id}`,
     () => axios
       .get(config.article, { paths: { id } })
       .then(article => ({
         ...article,
         ...[article.head, article, article.foot].reduce(
-          (t, c) => c 
+          (t, c) => c
             ? {
-                html: t.html + c.body,
-                dirs: t.dirs.concat(navsToDirs(c.dirs))
-              }
-            : t, 
+              html: t.html + c.body,
+              dirs: t.dirs.concat(navsToDirs(c.dirs))
+            }
+            : t,
           { html: '', dirs: [] as Navs<NavItem> }
         )
       }))
   )
-  
-  if (!article) return <ContentLayer main={ <LoadEle /> } />
+
+  if (!article) return <ContentLayer main={<LoadEle />} />
 
   app.setAppTitle(article.title)
 
   return (
-    <ContentLayer 
-      main={ 
+    <ContentLayer
+      main={
         <React.Fragment>
           <h1 className="main-title">
             {article.title}
             <span className="marker">{formatDate(new Date(article.mtime))}</span>
           </h1>
-          <MarkerBody 
-            html={article.html}
+          <MarkerBody
+            html={article.html || article.body}
             selector="h2,h3"
             onShowChange={(isShow, dom) => {
               let item;
-              if (isShow 
-                  && dom.textContent 
-                  && (item = findDir(article.dirs, dom.textContent))
-                ) {
+              if (isShow
+                && dom.textContent
+                && (item = findDir(article.dirs, dom.textContent))
+              ) {
                 setActive(item)
               }
             }}
           />
-          { showInteract
-            ? <React.Suspense fallback={ <LoadEle /> }>
-                <Interact className="commit-layer" {...article} />
-              </React.Suspense> 
-            : <ScreenLoadEle 
-                onShowChange={(isShow) => {
-                  isShow && !showInteract && setShowInteract(isShow) 
-                }
-                }
-              />
+          {showInteract
+            ? <React.Suspense fallback={<LoadEle />}>
+              <Interact className="commit-layer" {...article} />
+            </React.Suspense>
+            : <ScreenLoadEle
+              onShowChange={(isShow) => {
+                isShow && !showInteract && setShowInteract(isShow)
+              }
+              }
+            />
           }
         </React.Fragment>
-       }
-      right={ 
+      }
+      right={
         <Navigation
           className="navigation"
           title="目录列表"

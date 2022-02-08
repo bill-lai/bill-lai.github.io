@@ -78,7 +78,6 @@ const JoinColumns = witchParentClass((props: Article['column']) => {
   return (
     <div className={style['join-columns']}>
       <Link to={queryRoutePath('special')}>{props.title}</Link>
-      <Link to={queryRoutePath('special')}>{props.title}</Link>
     </div>
   )
 })
@@ -182,9 +181,10 @@ const Interact = witchParentClass((props: InteractProp) => {
       axios.get(config.userInfo).then(setUserInfo)
   }, [isAuth])
 
+  console.log(props)
   return (
     <div className={style['interact-layer'] + ' ' + style['variable']}>
-      <JoinColumns {...props.column} className={style.section} />
+      {/* <JoinColumns {...props.column} className={style.section} /> */}
       <ArticleReactions 
         onIncrement={ onIncrement }
         className={style.section} 
