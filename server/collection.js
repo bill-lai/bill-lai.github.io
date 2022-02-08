@@ -52,23 +52,26 @@ const genArticleData = article => {
 }
 
 // 生成去除无关的栏目数据
-const genColumnData = column => ({
-  ...column,
-  articles: column.articles
-    .filter(article => !article.template)
-    .map(base => {
-      const article = genArticleData(base)
-      delete article.dirs
-      delete article.body
-      delete article.issues
-      delete article.column
-      
-      config.templates.forEach(key => {
-        delete article[key]
+const genColumnData = column => {
+  return {
+
+    ...column,
+    articles: column.articles
+      .filter(article => !article.template)
+      .map(base => {
+        const article = genArticleData(base)
+        delete article.dirs
+        delete article.body
+        delete article.issues
+        delete article.column
+        
+        config.templates.forEach(key => {
+          delete article[key]
+        })
+        return article
       })
-      return article
-    })
-})
+    }
+}
 
 const genColumnListData = columnList => columnList.map(genColumnData)
 

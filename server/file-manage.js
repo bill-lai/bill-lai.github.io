@@ -262,11 +262,20 @@ const genColumn = (dir) => {
 
 // 生成所有数据
 const genData = (dir = paths.enter) => {
-  console.log('genData', dir)
-  const columnDirs = fs.readdirSync(dir)
-  const handleColumnDir = columnDir => genColumn(path.resolve(dir, columnDir))
+  const columnDirs = fs.readdirSync(dir).filter(atom => atom[0] !== '.')
 
-  return Promise.all(columnDirs.map(handleColumnDir))
+  const handleColumnDir = async columnDir => {
+    let data
+    try {
+      data = await genColumn(path.resolve(dir, columnDir))
+    } catch (err) {
+      console.error(err)
+    } finally {
+      return data
+    }
+  }
+
+  return Promise.all(columnDirs.map(handleColumnDir).filter(data => data))
     .then(data => {
       return data
     })

@@ -108,7 +108,6 @@ const ArticleInfo = () => {
               </React.Suspense> 
             : <ScreenLoadEle 
                 onShowChange={(isShow) => {
-                  console.log('loading', isShow)
                   isShow && !showInteract && setShowInteract(isShow) 
                 }
                 }

@@ -1,4 +1,14 @@
-const store = sessionStorage
+const store = global.sessionStorage || {
+  getItem() {
+    return undefined
+  },
+  setItem() {
+
+  },
+  removeItem() {
+    
+  }
+}
 
 type SessionToken = {
   token: string,
