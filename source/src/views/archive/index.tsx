@@ -10,6 +10,9 @@ function Special() {
     () => axios.get(config.columns),
     []
   )
+  columns.forEach(column => {
+    column.articles.sort((a, b) => b.mtime - a.mtime)
+  })
   const title = `专题`
 
   app.setAppTitle(title)

@@ -123,7 +123,11 @@ const ArticleInfo = () => {
           list={article.dirs}
           onClick={
             (dir) => {
-              dir && (window.location.hash = dir.id.toString())
+              if (dir) {
+                window.location.hash = dir.id
+                  .replaceAll(' ', '-')
+                  .replaceAll(/[\\.!=]/ig, '')
+              }
               setActive(dir)
             }
           }

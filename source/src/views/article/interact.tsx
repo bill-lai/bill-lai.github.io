@@ -66,21 +66,21 @@ const ArticleReactions = witchParentClass((props: ArticleReactionsProps) => (
         <ReactionItem count={props.comment} isActive={false} onClick={props.gotoComment}>
           {iconMaps.commoent}
         </ReactionItem>
-        <ReactionItem count={props.view} isActive={false} >
+        {/* <ReactionItem count={props.view} isActive={false} >
           {iconMaps.view}
-        </ReactionItem>
+        </ReactionItem> */}
       </div>
     </div>
   )
 )
 
-const JoinColumns = witchParentClass((props: Article['column']) => {
-  return (
-    <div className={style['join-columns']}>
-      <Link to={queryRoutePath('special')}>{props.title}</Link>
-    </div>
-  )
-})
+// const JoinColumns = witchParentClass((props: Article['column']) => {
+//   return (
+//     <div className={style['join-columns']}>
+//       <Link to={queryRoutePath('special')}>{props.title}</Link>
+//     </div>
+//   )
+// })
 
 export type InteractProp = {
   issues: Article['issues'],

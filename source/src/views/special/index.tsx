@@ -27,6 +27,9 @@ function Special() {
           }
         }
       }
+      yearColumns.forEach(column => {
+        column.articles.sort((a, b) => b.mtime - a.mtime)
+      })
       return yearColumns
     },
     [],

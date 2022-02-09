@@ -38,9 +38,11 @@ const Home = () => {
       columns.reduce(
         (t:Array<ArticleBase>, column) => t.concat(column.articles), 
         []
-      ),
+      ).sort((a, b) => b.ctime - a.ctime),
     [],
   )
+
+  
 
   const main = articles.map(item => (
     <ArticleItem 

@@ -70,6 +70,7 @@ const genColumnData = column => {
         })
         return article
       })
+      .sort((a, b) => b.mtime - a.mtime)
     }
 }
 
