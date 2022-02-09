@@ -1,0 +1,1 @@
+{"title":"vue3-reactivity源码解析","id":"94e7945213d9a62f838c","articles":[{"title":"vue3-reactive源码解析","id":"6452d43210bfdd32fd3c","mtime":1644415331558,"ctime":1644415322115,"desc":"阅读准备\n在阅读 reactive 源码之前，我们需要知道它的特性，了解特性推荐阅读单例测试源码或者是阅读官网的 API，推荐阅读单例，在后面阅读时才能更好理解。vue中响应式数据是通过Proxy来实现的，可以通过我之前写的Proxy 和 Reflect来了解它的特性和一些注意事项。\n在vue3中使"}]}
