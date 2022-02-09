@@ -124,9 +124,10 @@ const ArticleInfo = () => {
           onClick={
             (dir) => {
               if (dir) {
-                window.location.hash = dir.id
+                window.location.hash = dir.title
                   .replaceAll(' ', '-')
                   .replaceAll(/[\\.!=]/ig, '')
+                console.log(window.location.hash)
               }
               setActive(dir)
             }
