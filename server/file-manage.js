@@ -127,9 +127,9 @@ const articleJoinIssues = (config, body) => {
     }).then(res => {
       return {
         issues: {
-          number: res.data.number,
-          commentsUrl: res.data.comments_url,
-          reactionsUrl: res.data.reactions.url,
+          number: res.number,
+          commentsUrl: res.comments_url,
+          reactionsUrl: res.reactions.url,
         }
       }
     }).catch(err => {
