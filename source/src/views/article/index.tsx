@@ -127,6 +127,7 @@ const ArticleInfo = () => {
                 window.location.hash = dir.title
                   .replaceAll(' ', '-')
                   .replaceAll(/[\\.!=]/ig, '')
+                  .toLowerCase()
                 console.log(window.location.hash)
               }
               setActive(dir)
