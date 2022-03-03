@@ -75,6 +75,7 @@
   }
 
   pre {
+    position: relative;
     display: block;
     text-shadow: none;
     text-align: left;
@@ -294,5 +295,55 @@
     opacity: 1;
     background: inherit;
     color: inherit
+  }
+}
+
+
+pre > code .deleted:not(.prefix),
+pre > code .deleted:not(.prefix) {
+  .content {
+    text-decoration: line-through;
+  }
+	color: inherit;
+  pointer-events: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1.8em;
+    background-color: rgba(255, 0, 0, .2);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  &::before {
+    content: '-';
+    position: absolute;
+    left: 10px;
+    pointer-events: none;
+  }
+}
+
+pre > code .inserted:not(.prefix),
+pre > code .inserted:not(.prefix) {
+	color: inherit;
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1.8em;
+    background-color: rgba(0, 255, 128, .2);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  &::before {
+    content: '+';
+    position: absolute;
+    left: 10px;
+    pointer-events: none;
   }
 }

@@ -1,9 +1,8 @@
 const crypto = require('crypto')
 const marked = require('marked')
-const prismjs = require('prismjs')
+const prismjs = require('./prism')
 const fs = require('fs-extra')
 const path = require('path')
-
 
 // 拷贝文件夹内的所有文件到目标文件加
 const copyDirFiles = (originDir, targetDir, exclude) => {
@@ -27,6 +26,45 @@ const copyDirFiles = (originDir, targetDir, exclude) => {
 
 // 生成唯一id码
 const gendNewId = () => crypto.randomBytes(10).toString('hex')
+
+
+const diff = (code = '') => {
+  const lines = code.split('\n')
+  const insertLines = []
+  const deleteLines = []
+
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].startsWith('+')) {
+      insertLines.push(i)
+      lines[i] = lines[i].substring(1)
+    } else if (lines[i].startsWith('-')) {
+      deleteLines.push(i)
+      lines[i] = lines[i].substring(1)
+    }
+  }
+
+  const processLine = (line = '', className = '') => {
+    const startTrim = line.length - line.trimStart().length
+    const endTrim = line.length - (line.length - line.trimEnd().length)
+
+    return `<span class="${className}">${line.substring(0, startTrim)}<span class="content">${line.substring(startTrim, endTrim)}</span>${line.substring(endTrim)}</span>`
+    
+  }
+
+  return {
+    code: lines.join('\n'),
+    process(code = '') {
+      const lines = code.split('\n')
+      for (const index of insertLines) {
+        lines[index] = processLine(lines[index], 'inserted')
+      }
+      for (const index of deleteLines) {
+        lines[index] = processLine(lines[index], 'deleted')
+      }
+      return lines.join('\n')
+    }
+  }
+}
 
 // 解析mardown文本
 const analysisMarked = (markedStr, baseUrl = '/') => {
@@ -52,7 +90,18 @@ const analysisMarked = (markedStr, baseUrl = '/') => {
     smartLists: true,
     smartypants: false,
     highlight: function (code,lang) {
-      return prismjs.highlight(code, prismjs.languages[lang], lang)
+      const diffPrev = 'diff-'
+      const isDiff = lang.startsWith(diffPrev)
+      lang = isDiff ? lang.substring(diffPrev.length) : lang
+      const prismLange = prismjs.languages[lang]
+
+      if (isDiff) {
+        const { code: ncode, process } = diff(code)
+        const nncode = prismjs.highlight(ncode, prismLange, lang)
+        return process(nncode)
+      } else {
+        return prismjs.highlight(code, prismLange, lang)
+      }
     },
     walkTokens: function(token) {
       let rgRet
