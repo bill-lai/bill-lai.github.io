@@ -89,7 +89,8 @@
     border-radius: 5px;
     margin: 1.6em 0;
     overflow: auto;
-    background: var(--background)
+    background: var(--background);
+    font-size: 1rem;
   }
 
   pre > code {
