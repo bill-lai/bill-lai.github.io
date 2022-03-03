@@ -50,15 +50,24 @@ const findDir = (dirs: Array<NavItem>, title: string): NavItem | null => {
 
 const MarkerBody = withScreenShow(({ html, id }: { html: string, id: string }) => {
   const divRef = React.useRef<HTMLDivElement>(null)
+  html = html.replaceAll('language-ts', 'language-js')
+  // React.useEffect(() => {
+  //   if (divRef.current) {
+  //     const parser = new DOMParser()
+  //     const parseBody = parser.parseFromString(html, 'text/html').body
 
-  React.useEffect(() => {
-    if (divRef.current) {
-      divRef.current.innerHTML = html
-    }
-  }, [divRef])
+  //     console.log(parseBody.querySelector('pre code')?.innerHTML)
+
+  //     for (const dom of parseBody.children) {
+  //       divRef.current.appendChild(dom)
+  //     }
+  //     // console.log(html.substring(html.indexOf('<pre'), html.indexOf('</pre')))
+  //     // divRef.current.innerHTML = html
+  //   }
+  // }, [divRef])
 
   return <div className="marked-body">
-    <div ref={divRef}></div>
+    <div ref={divRef} dangerouslySetInnerHTML={{ __html: html }} ></div>
   </div>
 })
 

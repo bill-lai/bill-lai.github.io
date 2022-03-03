@@ -8,6 +8,7 @@
 
 .top-navs {
   --activeColor: #1a1a1a;
+  font-size: 1.1em;
 
   > li {
     > span {
@@ -27,6 +28,7 @@
         font-size: 0.8em;
         margin-left: 10px;
         line-height: 1em;
+        display: none;
       }
     }
 
@@ -49,11 +51,11 @@
 
 
 .child-navs {
-  padding-left: 20px;
+  padding-left: 34px;
+  font-size: 0.9em;
 
   span {
     position: relative;
-    font-size: 1.15rem;
     color: #1a1a1a;
 
     &:hover {
@@ -94,13 +96,13 @@
 .top-navs > li {
   > .child-navs {
     transition: all .2s ease;
-    overflow: hidden;
+    // overflow: hidden;
     // margin-left: -20px;
     padding-bottom: 10px;
   }
 
   &:not(.active) > .child-navs {
-    max-height: 0 !important;
+    // max-height: 0 !important;
     padding-bottom: 0;
   }
 }
