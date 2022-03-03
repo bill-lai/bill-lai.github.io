@@ -181,7 +181,6 @@ const Interact = witchParentClass((props: InteractProp) => {
       axios.get(config.userInfo).then(setUserInfo)
   }, [isAuth])
 
-  console.log(props)
   return (
     <div className={style['interact-layer'] + ' ' + style['variable']}>
       {/* <JoinColumns {...props.column} className={style.section} /> */}

@@ -48,12 +48,19 @@ const findDir = (dirs: Array<NavItem>, title: string): NavItem | null => {
   return null
 }
 
-const MarkerBody = withScreenShow(({ html }: { html: string }) =>
-  <div
-    className="marked-body"
-    dangerouslySetInnerHTML={{ __html: html }}
-  />
-)
+const MarkerBody = withScreenShow(({ html, id }: { html: string, id: string }) => {
+  const divRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    if (divRef.current) {
+      divRef.current.innerHTML = html
+    }
+  }, [divRef])
+
+  return <div className="marked-body">
+    <div ref={divRef}></div>
+  </div>
+})
 
 const ArticleInfo = () => {
   const { id } = useParams() as { id: 'string' }
@@ -91,6 +98,7 @@ const ArticleInfo = () => {
           </h1>
           <MarkerBody
             html={article.html || article.body}
+            id={article.id}
             selector="h2,h3"
             onShowChange={(isShow, dom) => {
               let item;
@@ -128,7 +136,6 @@ const ArticleInfo = () => {
                   .replaceAll(' ', '-')
                   .replaceAll(/[\\.!=]/ig, '')
                   .toLowerCase()
-                console.log(window.location.hash)
               }
               setActive(dir)
             }
