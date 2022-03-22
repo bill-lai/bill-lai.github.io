@@ -125,11 +125,12 @@ const articleJoinIssues = (config, body) => {
         ].filter(Boolean).join('')
       }
     }).then(res => {
+      const data = res.data || res
       return {
         issues: {
-          number: res.data.number,
-          commentsUrl: res.data.comments_url,
-          reactionsUrl: res.data.reactions.url,
+          number: data.number,
+          commentsUrl: data.comments_url,
+          reactionsUrl: data.reactions.url,
         }
       }
     }).catch(err => {

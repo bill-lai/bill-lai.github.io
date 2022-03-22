@@ -24,5 +24,5 @@ module.exports = {
   owner: `bill-lai`,
   repo: `bill-lai.github.io`,
   issuesLabel: `bill-lai-blog`,
-  token: `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`
+  token: `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`
 }
