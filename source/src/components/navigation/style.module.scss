@@ -28,7 +28,6 @@
         font-size: 0.8em;
         margin-left: 10px;
         line-height: 1em;
-        display: none;
       }
     }
 
@@ -51,7 +50,7 @@
 
 
 .child-navs {
-  padding-left: 34px;
+  padding-left: 20px;
   font-size: 0.9em;
 
   span {
@@ -96,13 +95,13 @@
 .top-navs > li {
   > .child-navs {
     transition: all .2s ease;
-    // overflow: hidden;
-    // margin-left: -20px;
+    overflow: hidden;
+    margin-left: -20px;
     padding-bottom: 10px;
   }
 
   &:not(.active) > .child-navs {
-    // max-height: 0 !important;
+    max-height: 0 !important;
     padding-bottom: 0;
   }
 }
