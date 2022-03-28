@@ -1,0 +1,1 @@
+{"title":"构建工具","id":"32e9060bb8f89f1a1c1b","articles":[{"title":"webpack5基础知识","id":"46492e8d9418d7f0ad08","mtime":1648476196354,"ctime":1648475898905,"desc":"注意，本文使用 webpack5.68.0，不同版本可能会有细微区别。\n\nwebpack是一个模块化打包 JavaScript 的工具，在 Wepack 里一切文件皆模块，通过Loader翻译转化文件，通过Plugin注入钩子，最后输出多个模块组合的文件，而Webpack专注于构建模块化项目。官网"}]}
