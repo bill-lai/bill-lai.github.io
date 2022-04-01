@@ -114,17 +114,25 @@ async function main() {
   
   await Promise.all([
     ...pages.map(({path: localPath, html, data, title}) => {
-      console.log(`正在生成${localPath}`)
+      console.log('正在生成 ' + localPath)
+
+      html = html.replace(/\$/ig, '~~~~ts~~~~')
+      data = JSON.stringify(data).replace(/\$/ig, '~~~~ts~~~~')
+      const outHtml = template.replace(
+        `<div id="root"></div>`,
+        `<div id="root">${html}</div>
+        <script>var globalState = ${data}</script>`
+      )
+      .replace(/~~~~ts~~~~/ig, '$')
+      .replace(
+        /<title.*>.*<\/title>/,
+        `<title>${title}</title>`
+      )
+
+      
       return fs.outputFile(
         path.resolve(config.output, localPath.substr(1), './index.html'),
-        template.replace(
-          /<div\s+id=["|']root["|']\s*>\s*<\/div>/,
-          `<div id="root">${html}</div>
-          <script>var globalState = ${JSON.stringify(data)}</script>`
-        ).replace(
-          /<title.*>.*<\/title>/,
-          `<title>${title}</title>`
-        )
+        outHtml
       )
     })
   ])
