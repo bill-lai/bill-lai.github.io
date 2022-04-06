@@ -70,8 +70,14 @@
   }
 
   ul, ol {
-    list-style: inherit;
     margin-left: 1em;
+  }
+
+  ul {
+    list-style: inherit;
+  }
+  ol {
+    list-style: auto;
   }
 
   pre {
